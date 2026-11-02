@@ -3317,6 +3317,72 @@ console.log(
   'color:#9a9db1;font-size:12px;',
   'color:#5e6173;font-size:11px;font-style:italic;'
 );
+
+   // Music Player Logic
+const playlist = [
+    {
+        title: "Digital Stance",
+        artist: "Pixabay Music",
+        // Pixabay එකෙන් download කරගත් file එකේ direct link එක මෙතන දාන්න
+        src: "https://cdn.pixabay.com/audio/2025/12/18/audio_digital-stance.mp3" 
+    },
+    {
+        title: "Inspiring Corporate Ambient Tech",
+        artist: "Pixabay Music",
+        src: "https://cdn.pixabay.com/audio/2026/02/05/audio_inspiring-tech.mp3"
+    },
+    {
+        title: "Creative Minds",
+        artist: "Bensound",
+        src: "https://www.bensound.com/bensound-music/bensound-creativeminds.mp3"
+    }
+];
+
+let currentTrackIndex = 0;
+const audio = document.getElementById('bg-music');
+const playBtn = document.getElementById('play-pause-btn');
+const playIcon = document.getElementById('play-icon');
+const pauseIcon = document.getElementById('pause-icon');
+const trackTitle = document.getElementById('track-title');
+const trackArtist = document.getElementById('track-artist');
+const nextBtn = document.getElementById('next-btn');
+
+// Load a track
+function loadTrack(index) {
+    const track = playlist[index];
+    audio.src = track.src;
+    trackTitle.textContent = track.title;
+    trackArtist.textContent = track.artist;
+}
+
+// Play/Pause toggle
+playBtn.addEventListener('click', () => {
+    if (audio.paused) {
+        audio.play().catch(error => {
+            console.error("Playback failed:", error);
+            // Autoplay blocked - alert user
+            alert("Please interact with the page first to enable audio.");
+        });
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+    } else {
+        audio.pause();
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+    }
+});
+
+// Next track
+nextBtn.addEventListener('click', () => {
+    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+    loadTrack(currentTrackIndex);
+    if (!audio.paused) {
+        audio.play();
+    }
+});
+
+// Load first track on page load
+loadTrack(currentTrackIndex);
 </script>
 
 </body>
