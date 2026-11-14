@@ -191,22 +191,32 @@ body.light #bg-canvas{opacity:.15}
 /* ═══════════ MUSIC PLAYER ═══════════ */
 .music-player{
   position:fixed;bottom:5.5rem;right:1.5rem;z-index:250;width:340px;max-width:calc(100vw - 3rem);
+  max-height:calc(100vh - 7rem);overflow-y:auto;
   background:rgb(var(--surface-rgb) / 0.98);backdrop-filter:blur(30px) saturate(180%);
-  border:1px solid rgb(var(--line-rgb) / 0.15);border-radius:20px;overflow:hidden;
+  border:1px solid rgb(var(--line-rgb) / 0.15);border-radius:20px;overflow-x:hidden;
   box-shadow:0 20px 60px var(--card-shadow);transform:translateY(20px) scale(.95);
   opacity:0;pointer-events:none;transition:all .35s var(--ease);
 }
 .music-player.open{opacity:1;transform:none;pointer-events:auto}
 .music-player-head{padding:1rem 1.2rem;border-bottom:1px solid rgb(var(--line-rgb) / 0.08);display:flex;align-items:center;gap:.7rem;font-family:var(--font-display);font-size:.88rem;font-weight:500;color:rgb(var(--text-rgb))}
 .music-player-head .status{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success)}
+.music-player-head .status.loading{background:var(--warning);box-shadow:0 0 8px var(--warning);animation:pulse 1s infinite}
 .music-close{margin-left:auto;font-size:.9rem;color:rgb(var(--muted-rgb));transition:color .3s;cursor:pointer}
 .music-close:hover{color:rgb(var(--text-rgb))}
+.music-search{display:flex;gap:.5rem;padding:.8rem 1.2rem;border-bottom:1px solid rgb(var(--line-rgb) / 0.08)}
+.music-search input{flex:1;min-width:0;padding:.55rem .85rem;background:rgb(var(--surface-2-rgb));border:1px solid rgb(var(--line-rgb) / 0.08);border-radius:100px;color:rgb(var(--text-rgb));font-size:.78rem;transition:border-color .2s}
+.music-search input::placeholder{color:rgb(var(--dim-rgb))}
+.music-search input:focus{border-color:var(--accent)}
+.music-search button{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:background .2s}
+.music-search button:hover{background:var(--accent-2)}
+.music-search button svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2}
 .music-now{padding:1.2rem;text-align:center}
 .music-art{width:100%;aspect-ratio:1;max-width:180px;margin:0 auto 1rem;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;position:relative}
 .music-art svg{width:60%;height:60%;fill:rgba(255,255,255,.3)}
-.music-art::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.2),transparent 60%)}
+.music-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;display:none}
+.music-art::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.2),transparent 60%);z-index:2;pointer-events:none}
 .music-title{font-family:var(--font-display);font-size:1rem;font-weight:500;color:rgb(var(--text-rgb));margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.music-artist{font-size:.75rem;color:rgb(var(--muted-rgb));margin-bottom:1rem}
+.music-artist{font-size:.75rem;color:rgb(var(--muted-rgb));margin-bottom:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .music-progress{padding:0 1.2rem}
 .music-progress-bar{width:100%;height:4px;background:rgb(var(--surface-3-rgb));border-radius:100px;overflow:hidden;cursor:pointer;position:relative}
 .music-progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:100px;transition:width .1s linear}
@@ -232,6 +242,7 @@ body.light #bg-canvas{opacity:.15}
 .playlist-item:hover{background:rgb(var(--text-rgb) / 0.04)}
 .playlist-item.active{background:rgb(var(--accent-rgb) / 0.1)}
 .playlist-item.active .playlist-num{color:var(--accent)}
+.playlist-empty{padding:1rem 1.2rem;font-size:.75rem;color:rgb(var(--dim-rgb));text-align:center}
 .playlist-num{font-family:var(--font-mono);font-size:.65rem;color:rgb(var(--dim-rgb));width:18px;text-align:center;flex-shrink:0}
 .playlist-info{flex:1;min-width:0}
 .playlist-title{font-size:.8rem;font-weight:500;color:rgb(var(--text-rgb));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -241,7 +252,7 @@ body.light #bg-canvas{opacity:.15}
 .music-playlist-btn{display:flex;align-items:center;gap:.4rem;color:rgb(var(--muted-rgb));transition:color .2s;cursor:pointer}
 .music-playlist-btn:hover{color:var(--accent)}
 .music-playlist-btn svg{width:12px;height:12px;fill:currentColor}
-@media (max-width:500px){.music-player{right:1rem;bottom:4.5rem;width:calc(100vw - 2rem)}}
+@media (max-width:500px){.music-player{right:1rem;bottom:4.5rem;width:calc(100vw - 2rem);max-height:calc(100vh - 6rem)}}
 
 /* ═══════════ SETTINGS ═══════════ */
 .settings-panel{
@@ -697,11 +708,18 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
   </button>
 </div>
 
-<div class="music-player" id="music-player">
-  <div class="music-player-head"><span class="status"></span>Now Playing<button class="music-close" id="music-close">✕</button></div>
+<div class="music-player" id="music-player" data-lenis-prevent>
+  <div class="music-player-head"><span class="status" id="music-status"></span>Now Playing<button class="music-close" id="music-close" aria-label="Close player">✕</button></div>
+  <form class="music-search" id="music-search-form" autocomplete="off">
+    <input type="search" id="music-search-input" placeholder="Search songs or artists..." maxlength="80" aria-label="Search music" />
+    <button type="submit" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></button>
+  </form>
   <div class="music-now">
-    <div class="music-art"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
-    <div class="music-title" id="music-title">Select a track</div>
+    <div class="music-art">
+      <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      <img id="music-art-img" alt="" />
+    </div>
+    <div class="music-title" id="music-title">Loading tracks…</div>
     <div class="music-artist" id="music-artist">—</div>
   </div>
   <div class="music-progress">
@@ -722,9 +740,9 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05A4.5 4.5 0 0 0 16.5 12z"/></svg>
     <input type="range" id="volume-slider" min="0" max="100" value="60" aria-label="Volume" />
   </div>
-  <div class="music-playlist" id="music-playlist"></div>
+  <div class="music-playlist" id="music-playlist" data-lenis-prevent></div>
   <div class="music-footer">
-    <span id="track-counter">0 / 10 tracks</span>
+    <span id="track-counter">0 / 0 tracks</span>
     <button class="music-playlist-btn" id="playlist-toggle"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>Playlist</button>
   </div>
 </div>
@@ -744,7 +762,7 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     <button class="chat-head-btn" id="chat-clear" aria-label="Clear chat"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
     <button class="chat-head-btn" id="chat-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
   </div>
-  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-messages" id="chat-messages" data-lenis-prevent></div>
   <div class="chat-suggestions" id="chat-suggestions">
     <div class="chat-suggestion-label">Try asking</div>
     <button class="chat-suggestion" data-q="What technologies does Shashin work with?">What technologies does Shashin work with?</button>
@@ -761,7 +779,7 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
 <div class="command-palette" id="command-palette">
   <div class="command-box">
     <input class="command-input" id="command-input" placeholder="Type a command..." />
-    <div class="command-list" id="command-list">
+    <div class="command-list" id="command-list" data-lenis-prevent>
       <div class="command-item" data-action="scroll" data-target="#about">Go to About <kbd>1</kbd></div>
       <div class="command-item" data-action="scroll" data-target="#work">Go to Work <kbd>2</kbd></div>
       <div class="command-item" data-action="scroll" data-target="#contact">Go to Contact <kbd>3</kbd></div>
@@ -1356,75 +1374,243 @@ function showToast(msg) {
   try { const t = document.getElementById('toast'); document.getElementById('toast-msg').textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800); } catch (e) {}
 }
 
+/* ═══════════════════════════════════════════════════════════
+   MUSIC PLAYER — powered by Cloudflare Worker
+   ?search=<query>  → iTunes search (JSON)
+   ?url=<audio_url> → audio proxy with Range support
+   ═══════════════════════════════════════════════════════════ */
+const MUSIC_WORKER = 'https://shashin-music.23da2-0117.workers.dev/';
+
 const MusicPlayer = {
   audio: null, index: 0, playing: false, shuffle: false, repeat: false, volume: 0.6,
-  tracks: [
-    { title: 'Lo-Fi 04', artist: 'Lily J · Mixkit', src: 'https://assets.mixkit.co/music/766/766.mp3' },
-    { title: 'Sleepy Cat', artist: 'Alejandro Magaña · Mixkit', src: 'https://assets.mixkit.co/music/135/135.mp3' },
-    { title: 'Uplifting', artist: 'Francisco Alvear · Mixkit', src: 'https://assets.mixkit.co/music/670/670.mp3' },
-    { title: 'Feeling Happy', artist: 'Ahjay Stelino · Mixkit', src: 'https://assets.mixkit.co/music/5/5.mp3' },
-    { title: 'Mixkit Chill', artist: 'Mixkit', src: 'https://assets.mixkit.co/music/371/371.mp3' },
-    { title: 'Mixkit Wave', artist: 'Mixkit', src: 'https://assets.mixkit.co/music/745/745.mp3' },
-    { title: 'Ambient Journey', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-    { title: 'Digital Flow', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-    { title: 'Night Drive', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
-    { title: 'Deep Focus', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3' },
+  tracks: [], failCount: 0, busy: false,
+  defaultQueries: ['lofi chill beats', 'alan walker', 'chill instrumental'],
+  // Backup tracks if the Worker / iTunes is unreachable
+  fallbackTracks: [
+    { title: 'Ambient Journey', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', art: '' },
+    { title: 'Digital Flow', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', art: '' },
+    { title: 'Night Drive', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', art: '' },
+    { title: 'Deep Focus', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', art: '' },
   ],
-  init() { this.audio = document.getElementById('audio'); this.audio.volume = this.volume; this._buildPlaylistUI(); this._bindEvents(); this._loadTrack(0, false); },
-  _loadTrack(i, autoplay) {
-    this.index = (i + this.tracks.length) % this.tracks.length;
-    const t = this.tracks[this.index];
-    this.audio.src = t.src; this.audio.load();
+
+  proxy(url) { return MUSIC_WORKER + '?url=' + encodeURIComponent(url); },
+
+  async search(query) {
+    const res = await fetch(MUSIC_WORKER + '?search=' + encodeURIComponent(query));
+    if (!res.ok) throw new Error('Search failed: ' + res.status);
+    const data = await res.json();
+    const seen = new Set();
+    return (data.results || [])
+      .filter(r => r.previewUrl && !seen.has(r.trackId) && seen.add(r.trackId))
+      .map(r => ({
+        title: r.trackName || 'Unknown',
+        artist: r.artistName || 'Unknown',
+        src: this.proxy(r.previewUrl),
+        art: (r.artworkUrl100 || '').replace('100x100', '300x300'),
+      }));
+  },
+
+  init() {
+    this.audio = document.getElementById('audio');
+    this.audio.volume = this.volume;
+    this._bindEvents();
+    this._renderPlaylist();
+    this.loadDefault();
+  },
+
+  _setLoading(on) {
+    this.busy = on;
+    const s = document.getElementById('music-status');
+    if (s) s.classList.toggle('loading', on);
+  },
+
+  async loadDefault() {
+    this._setLoading(true);
+    let list = [];
+    try {
+      const q = this.defaultQueries[Math.floor(Math.random() * this.defaultQueries.length)];
+      list = await this.search(q);
+    } catch (e) { console.warn('Music search failed:', e); }
+    if (!list.length) { list = this.fallbackTracks; showToast('Using backup tracks'); }
+    this._setLoading(false);
+    this.setTracks(list, false);
+  },
+
+  async runSearch(query) {
+    query = (query || '').trim();
+    if (!query || this.busy) return;
+    this._setLoading(true);
+    document.getElementById('music-title').textContent = 'Searching…';
+    document.getElementById('music-artist').textContent = '“' + query + '”';
+    try {
+      const list = await this.search(query);
+      if (!list.length) {
+        showToast('No results for "' + query + '"');
+        if (this.tracks[this.index]) this._showTrackInfo(this.tracks[this.index]);
+        return;
+      }
+      document.getElementById('music-playlist').classList.add('open');
+      this.setTracks(list, true);
+    } catch (e) {
+      showToast('Search failed — check connection');
+      if (this.tracks[this.index]) this._showTrackInfo(this.tracks[this.index]);
+    } finally { this._setLoading(false); }
+  },
+
+  setTracks(list, autoplay) {
+    this.tracks = list;
+    this.failCount = 0;
+    this._renderPlaylist();
+    this._loadTrack(0, autoplay);
+  },
+
+  _showTrackInfo(t) {
     document.getElementById('music-title').textContent = t.title;
     document.getElementById('music-artist').textContent = t.artist;
+    const img = document.getElementById('music-art-img');
+    if (t.art) { img.style.display = 'block'; img.src = t.art; } else { img.style.display = 'none'; img.removeAttribute('src'); }
+  },
+
+  _loadTrack(i, autoplay) {
+    if (!this.tracks.length) return;
+    this.index = (i + this.tracks.length) % this.tracks.length;
+    const t = this.tracks[this.index];
+    this.audio.src = t.src;
+    this.audio.load();
+    this._showTrackInfo(t);
+    document.getElementById('time-current').textContent = '0:00';
     document.getElementById('time-total').textContent = '0:00';
     document.getElementById('progress-fill').style.width = '0%';
+    document.getElementById('track-counter').textContent = `${this.index + 1} / ${this.tracks.length} tracks`;
     this._highlightPlaylist();
     if (autoplay) this.play();
   },
-  async play() { try { await this.audio.play(); this.playing = true; this._setPlayIcon(true); document.getElementById('music-btn').classList.add('active'); } catch (e) { this.playing = false; showToast('Tap play again'); } },
-  pause() { this.audio.pause(); this.playing = false; this._setPlayIcon(false); document.getElementById('music-btn').classList.remove('active'); },
-  toggle() { this.playing ? this.pause() : this.play(); },
-  next() { if (this.shuffle) { let n; do { n = Math.floor(Math.random() * this.tracks.length); } while (n === this.index && this.tracks.length > 1); this._loadTrack(n, this.playing); } else this._loadTrack(this.index + 1, this.playing); },
-  prev() { if (this.audio.currentTime > 3) { this.audio.currentTime = 0; return; } this._loadTrack(this.index - 1, this.playing); },
-  setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); this.audio.volume = this.volume; },
-  _setPlayIcon(p) { document.getElementById('play-icon').style.display = p ? 'none' : 'block'; document.getElementById('pause-icon').style.display = p ? 'block' : 'none'; },
-  _highlightPlaylist() { document.querySelectorAll('.playlist-item').forEach((el, i) => { el.classList.toggle('active', i === this.index); const b = el.querySelector('.playlist-playing'); if (b) b.style.display = (i === this.index && this.playing) ? 'inline' : 'none'; }); },
-  _buildPlaylistUI() {
-    const el = document.getElementById('music-playlist');
-    el.innerHTML = this.tracks.map((t, i) => `<div class="playlist-item" data-index="${i}"><span class="playlist-num">${String(i + 1).padStart(2, '0')}</span><div class="playlist-info"><div class="playlist-title">${t.title}</div><div class="playlist-artist">${t.artist}</div></div><span class="playlist-playing" style="display:none">▶</span></div>`).join('');
-    document.getElementById('track-counter').textContent = `0 / ${this.tracks.length} tracks`;
-    el.querySelectorAll('.playlist-item').forEach(item => item.addEventListener('click', () => this._loadTrack(parseInt(item.dataset.index, 10), true)));
+
+  async play() {
+    if (!this.tracks.length) { showToast('Loading tracks…'); return; }
+    try { await this.audio.play(); }
+    catch (e) { if (e && e.name === 'AbortError') return; this._setUI(false); showToast('Tap play again'); }
   },
+  pause() { this.audio.pause(); },
+  toggle() { if (this.audio.paused) this.play(); else this.pause(); },
+
+  next(force) {
+    if (!this.tracks.length) return;
+    const autoplay = force === true || !this.audio.paused;
+    if (this.shuffle && this.tracks.length > 1) {
+      let n; do { n = Math.floor(Math.random() * this.tracks.length); } while (n === this.index);
+      this._loadTrack(n, autoplay);
+    } else this._loadTrack(this.index + 1, autoplay);
+  },
+  prev() {
+    if (!this.tracks.length) return;
+    if (this.audio.currentTime > 3) { this.audio.currentTime = 0; return; }
+    this._loadTrack(this.index - 1, !this.audio.paused);
+  },
+  setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); this.audio.volume = this.volume; },
+
+  _setUI(p) {
+    this.playing = p;
+    document.getElementById('play-icon').style.display = p ? 'none' : 'block';
+    document.getElementById('pause-icon').style.display = p ? 'block' : 'none';
+    document.getElementById('music-btn').classList.toggle('active', p);
+    this._highlightPlaylist();
+  },
+
+  _highlightPlaylist() {
+    document.querySelectorAll('.playlist-item').forEach((el, i) => {
+      el.classList.toggle('active', i === this.index);
+      const b = el.querySelector('.playlist-playing');
+      if (b) b.style.display = (i === this.index && this.playing) ? 'inline' : 'none';
+    });
+  },
+
+  _renderPlaylist() {
+    const el = document.getElementById('music-playlist');
+    el.textContent = '';
+    if (!this.tracks.length) {
+      const d = document.createElement('div'); d.className = 'playlist-empty'; d.textContent = 'No tracks yet';
+      el.appendChild(d);
+      document.getElementById('track-counter').textContent = '0 / 0 tracks';
+      return;
+    }
+    this.tracks.forEach((t, i) => {
+      const row = document.createElement('div'); row.className = 'playlist-item';
+      const num = document.createElement('span'); num.className = 'playlist-num'; num.textContent = String(i + 1).padStart(2, '0');
+      const info = document.createElement('div'); info.className = 'playlist-info';
+      const ti = document.createElement('div'); ti.className = 'playlist-title'; ti.textContent = t.title;
+      const ar = document.createElement('div'); ar.className = 'playlist-artist'; ar.textContent = t.artist;
+      info.append(ti, ar);
+      const pl = document.createElement('span'); pl.className = 'playlist-playing'; pl.style.display = 'none'; pl.textContent = '▶';
+      row.append(num, info, pl);
+      row.addEventListener('click', () => this._loadTrack(i, true));
+      el.appendChild(row);
+    });
+    this._highlightPlaylist();
+  },
+
   _bindEvents() {
     const a = this.audio;
-    a.addEventListener('timeupdate', () => { if (!a.duration || !isFinite(a.duration)) return; document.getElementById('progress-fill').style.width = ((a.currentTime / a.duration) * 100) + '%'; document.getElementById('time-current').textContent = this._fmt(a.currentTime); });
+    a.addEventListener('timeupdate', () => {
+      if (!a.duration || !isFinite(a.duration)) return;
+      document.getElementById('progress-fill').style.width = ((a.currentTime / a.duration) * 100) + '%';
+      document.getElementById('time-current').textContent = this._fmt(a.currentTime);
+    });
     a.addEventListener('loadedmetadata', () => { if (a.duration && isFinite(a.duration)) document.getElementById('time-total').textContent = this._fmt(a.duration); });
-    a.addEventListener('ended', () => { if (this.repeat) { a.currentTime = 0; this.play(); } else this.next(); });
-    a.addEventListener('play', () => { this.playing = true; this._setPlayIcon(true); document.getElementById('music-btn').classList.add('active'); this._highlightPlaylist(); document.getElementById('track-counter').textContent = `${this.index + 1} / ${this.tracks.length} tracks`; });
-    a.addEventListener('pause', () => { this.playing = false; this._setPlayIcon(false); document.getElementById('music-btn').classList.remove('active'); });
-    a.addEventListener('error', () => { showToast('Track unavailable'); setTimeout(() => this.next(), 800); });
+    a.addEventListener('durationchange', () => { if (a.duration && isFinite(a.duration)) document.getElementById('time-total').textContent = this._fmt(a.duration); });
+    a.addEventListener('ended', () => {
+      if (this.repeat) { a.currentTime = 0; this.play(); }
+      else this.next(true);
+    });
+    a.addEventListener('play', () => this._setUI(true));
+    a.addEventListener('playing', () => { this.failCount = 0; this._setUI(true); });
+    a.addEventListener('pause', () => this._setUI(false));
+    a.addEventListener('error', () => {
+      if (!a.getAttribute('src')) return;
+      this.failCount++;
+      this._setUI(false);
+      if (this.failCount >= this.tracks.length) {
+        showToast('No playable tracks — try another search');
+        this.failCount = 0;
+        return;
+      }
+      showToast('Track unavailable, skipping…');
+      setTimeout(() => this.next(true), 700);
+    });
   },
+
   _fmt(s) { if (!s || !isFinite(s)) return '0:00'; return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0'); }
 };
 
 try {
   MusicPlayer.init();
   const mPanel = document.getElementById('music-player');
-  document.getElementById('music-btn').addEventListener('click', () => mPanel.classList.toggle('open'));
+  document.getElementById('music-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('settings-panel').classList.remove('open');
+    mPanel.classList.toggle('open');
+  });
   document.getElementById('music-close').addEventListener('click', () => mPanel.classList.remove('open'));
   document.getElementById('play-btn').addEventListener('click', () => MusicPlayer.toggle());
-  document.getElementById('next-btn').addEventListener('click', () => MusicPlayer.next());
+  document.getElementById('next-btn').addEventListener('click', () => MusicPlayer.next(!MusicPlayer.audio.paused));
   document.getElementById('prev-btn').addEventListener('click', () => MusicPlayer.prev());
   document.getElementById('shuffle-btn').addEventListener('click', (e) => { MusicPlayer.shuffle = !MusicPlayer.shuffle; e.currentTarget.classList.toggle('on', MusicPlayer.shuffle); showToast(MusicPlayer.shuffle ? 'Shuffle on' : 'Shuffle off'); });
   document.getElementById('repeat-btn').addEventListener('click', (e) => { MusicPlayer.repeat = !MusicPlayer.repeat; e.currentTarget.classList.toggle('on', MusicPlayer.repeat); showToast(MusicPlayer.repeat ? 'Repeat on' : 'Repeat off'); });
   document.getElementById('volume-slider').addEventListener('input', (e) => MusicPlayer.setVolume(e.target.value / 100));
   document.getElementById('playlist-toggle').addEventListener('click', () => document.getElementById('music-playlist').classList.toggle('open'));
+  document.getElementById('music-search-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    MusicPlayer.runSearch(document.getElementById('music-search-input').value);
+  });
   const pb = document.getElementById('progress-bar');
-  pb.addEventListener('click', (e) => { const r = pb.getBoundingClientRect(); const pct = (e.clientX - r.left) / r.width; if (MusicPlayer.audio.duration && isFinite(MusicPlayer.audio.duration)) MusicPlayer.audio.currentTime = pct * MusicPlayer.audio.duration; });
+  pb.addEventListener('click', (e) => {
+    const r = pb.getBoundingClientRect(); const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const a = MusicPlayer.audio;
+    if (a.duration && isFinite(a.duration)) a.currentTime = pct * a.duration;
+  });
   const vizBars = document.querySelectorAll('#music-viz span');
   setInterval(() => { if (MusicPlayer.playing) vizBars.forEach(b => b.style.height = (20 + Math.random() * 80) + '%'); else vizBars.forEach(b => b.style.height = '20%'); }, 130);
-} catch (e) {}
+} catch (e) { console.error('Music init error:', e); }
 
 try {
   const themeBtn = document.getElementById('theme-btn');
@@ -1462,7 +1648,7 @@ const ChatAI = {
     { keys: ['available','freelance','intern','job'], reply: 'Yes ✅ Open to **freelance + internships in 2026**. Currently interning at GRI while building live products. 💪' },
     { keys: ['github','repo','code'], reply: '[github.com/shashin2000](https://github.com/shashin2000) — **1,300+ commits** and 15+ public repos 🔥' },
     { keys: ['hello','hi','hey'], reply: 'Hey! 👋 I\'m Shashin\'s AI. Ask about his products, skills, or how to reach him.' },
-    { keys: ['music','song'], reply: 'Click ♪ (bottom-right) for **10 real tracks** — lo-fi, chill, ambient. Space = play/pause 🎵' },
+    { keys: ['music','song'], reply: 'Click ♪ (bottom-right) — you can **search any song or artist** and play 30s previews. Space = play/pause 🎵' },
     { keys: ['thank','thanks'], reply: 'You\'re welcome! 😊' },
   ],
   init() {
@@ -1692,6 +1878,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
       if (cat === 'all' || p.dataset.category === cat) { p.classList.remove('hidden'); p.classList.add('visible'); }
       else p.classList.add('hidden');
     });
+    if (typeof ScrollTrigger !== 'undefined') setTimeout(() => ScrollTrigger.refresh(), 100);
   });
 });
 
