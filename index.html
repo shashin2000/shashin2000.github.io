@@ -1395,19 +1395,49 @@ const MusicPlayer = {
 
   proxy(url) { return MUSIC_WORKER + '?url=' + encodeURIComponent(url); },
 
-  async search(query) {
-    const res = await fetch(MUSIC_WORKER + '?search=' + encodeURIComponent(query));
-    if (!res.ok) throw new Error('Search failed: ' + res.status);
-    const data = await res.json();
+  _mapResults(data, viaProxy) {
     const seen = new Set();
     return (data.results || [])
       .filter(r => r.previewUrl && !seen.has(r.trackId) && seen.add(r.trackId))
       .map(r => ({
         title: r.trackName || 'Unknown',
         artist: r.artistName || 'Unknown',
-        src: this.proxy(r.previewUrl),
+        src: viaProxy ? this.proxy(r.previewUrl) : r.previewUrl,
         art: (r.artworkUrl100 || '').replace('100x100', '300x300'),
       }));
+  },
+
+  async search(query) {
+    const key = 'music_cache_' + query.toLowerCase();
+    // 1) browser cache (1 hour) — avoids hitting iTunes again
+    try {
+      const c = JSON.parse(localStorage.getItem(key) || 'null');
+      if (c && Date.now() - c.t < 3600000 && c.list && c.list.length) return c.list;
+    } catch (e) {}
+
+    let list = [], lastErr = null;
+
+    // 2) via Worker
+    try {
+      const res = await fetch(MUSIC_WORKER + '?search=' + encodeURIComponent(query));
+      const text = await res.text();
+      let data; try { data = JSON.parse(text); } catch (e) { throw new Error(text.slice(0, 80)); }
+      if (!res.ok || data.error) throw new Error(data.error || ('HTTP ' + res.status));
+      list = this._mapResults(data, true);
+    } catch (e) { lastErr = e; console.warn('Worker search failed:', e); }
+
+    // 3) direct iTunes (from the visitor's own IP, not rate-limited like the Worker)
+    if (!list.length) {
+      try {
+        const res = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(query) + '&media=music&entity=song&limit=25');
+        if (!res.ok) throw new Error('iTunes HTTP ' + res.status);
+        list = this._mapResults(await res.json(), false);
+      } catch (e) { lastErr = e; console.warn('Direct iTunes search failed:', e); }
+    }
+
+    if (!list.length && lastErr) throw lastErr;
+    if (list.length) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), list })); } catch (e) {} }
+    return list;
   },
 
   init() {
@@ -1430,8 +1460,8 @@ const MusicPlayer = {
     try {
       const q = this.defaultQueries[Math.floor(Math.random() * this.defaultQueries.length)];
       list = await this.search(q);
-    } catch (e) { console.warn('Music search failed:', e); }
-    if (!list.length) { list = this.fallbackTracks; showToast('Using backup tracks'); }
+    } catch (e) { console.warn('Music search failed:', e); this.lastError = (e && e.message) || String(e); }
+    if (!list.length) { list = this.fallbackTracks; showToast('Backup tracks: ' + (this.lastError || 'search returned 0 results')); }
     this._setLoading(false);
     this.setTracks(list, false);
   },
@@ -1452,7 +1482,8 @@ const MusicPlayer = {
       document.getElementById('music-playlist').classList.add('open');
       this.setTracks(list, true);
     } catch (e) {
-      showToast('Search failed — check connection');
+      console.warn('Music search failed:', e);
+      showToast('Search failed: ' + ((e && e.message) || e));
       if (this.tracks[this.index]) this._showTrackInfo(this.tracks[this.index]);
     } finally { this._setLoading(false); }
   },
