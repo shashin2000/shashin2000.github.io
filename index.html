@@ -50,6 +50,9 @@ input,textarea{font-family:inherit;outline:none}
   --font-serif:'Instrument Serif',serif;
   --font-mono:'JetBrains Mono',monospace;
   --ease: cubic-bezier(.7,0,.2,1);
+  --cursor-size: 8px;
+  --cursor-hover-size: 84px;
+  --cursor-scale: 1;
 }
 body.light{
   --bg-rgb: 250 250 252; --surface-rgb: 255 255 255; --surface-2-rgb: 245 245 248;
@@ -75,13 +78,13 @@ body.light{
   body.cursor-active .cursor-ring{display:flex}
 }
 .cursor-dot{
-  width:8px;height:8px;border-radius:50%;
+  width:var(--cursor-size);height:var(--cursor-size);border-radius:50%;
   background:#fff;border:1.5px solid var(--accent);
   box-shadow:0 0 0 2px rgba(0,0,0,.15),0 0 12px var(--accent);
   align-items:center;justify-content:center;
 }
 .cursor-ring{
-  width:44px;height:44px;border-radius:50%;
+  width:calc(var(--cursor-size) * 5);height:calc(var(--cursor-size) * 5);border-radius:50%;
   border:1.5px solid var(--accent);
   background:rgba(var(--accent-rgb) / 0.08);
   box-shadow:0 0 15px rgba(var(--accent-rgb) / 0.3),inset 0 0 10px rgba(var(--accent-rgb) / 0.1);
@@ -91,7 +94,8 @@ body.light{
   color:transparent;overflow:hidden;
 }
 .cursor-ring.hover{
-  width:84px;height:84px;background:var(--accent);
+  width:calc(var(--cursor-size) * 10);height:calc(var(--cursor-size) * 10);
+  background:var(--accent);
   border-color:var(--accent);color:#fff;
   box-shadow:0 0 25px rgba(var(--accent-rgb) / 0.6);
 }
@@ -256,7 +260,7 @@ body.light #bg-canvas{opacity:.15}
 
 /* ═══════════ SETTINGS ═══════════ */
 .settings-panel{
-  position:fixed;bottom:5.5rem;right:1.5rem;z-index:250;width:280px;max-width:calc(100vw - 3rem);
+  position:fixed;bottom:5.5rem;right:1.5rem;z-index:250;width:290px;max-width:calc(100vw - 3rem);
   background:rgb(var(--surface-rgb) / 0.98);backdrop-filter:blur(30px) saturate(180%);
   border:1px solid rgb(var(--line-rgb) / 0.15);border-radius:20px;padding:1.2rem;
   box-shadow:0 20px 60px var(--card-shadow);transform:translateY(20px) scale(.95);
@@ -266,13 +270,20 @@ body.light #bg-canvas{opacity:.15}
 .settings-title{font-family:var(--font-display);font-size:.95rem;font-weight:500;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;color:rgb(var(--text-rgb))}
 .settings-close{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid rgb(var(--line-rgb) / 0.15);font-size:.7rem;transition:all .3s;color:rgb(var(--muted-rgb));cursor:pointer}
 .settings-close:hover{border-color:rgb(var(--text-rgb));color:rgb(var(--text-rgb))}
-.settings-row{display:flex;justify-content:space-between;align-items:center;padding:.65rem 0;border-top:1px solid rgb(var(--line-rgb) / 0.06);font-size:.8rem}
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:.65rem 0;border-top:1px solid rgb(var(--line-rgb) / 0.06);font-size:.8rem;gap:.8rem}
 .settings-row:first-of-type{border-top:none;padding-top:0}
-.settings-row label{color:rgb(var(--muted-rgb))}
-.toggle{width:38px;height:22px;border-radius:100px;background:rgb(var(--surface-3-rgb));position:relative;cursor:pointer;transition:background .3s}
+.settings-row label{color:rgb(var(--muted-rgb));white-space:nowrap}
+.toggle{width:38px;height:22px;border-radius:100px;background:rgb(var(--surface-3-rgb));position:relative;cursor:pointer;transition:background .3s;flex-shrink:0}
 .toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:rgb(var(--text-rgb));transition:all .3s var(--ease)}
 .toggle.on{background:var(--accent)}
 .toggle.on::after{left:19px;background:#fff}
+
+/* Cursor size slider */
+.slider-wrap{display:flex;align-items:center;gap:.6rem;flex:1;max-width:150px}
+.slider-wrap input[type="range"]{flex:1;height:3px;-webkit-appearance:none;appearance:none;background:rgb(var(--surface-3-rgb));border-radius:2px;cursor:pointer}
+.slider-wrap input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px rgba(var(--accent-rgb) / 0.5)}
+.slider-wrap input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:none;cursor:pointer}
+.slider-wrap span{font-family:var(--font-mono);font-size:.65rem;color:rgb(var(--muted-rgb));min-width:36px;text-align:right}
 
 /* ═══════════ CHATBOT ═══════════ */
 .chat-panel{
@@ -750,6 +761,13 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
 <div class="settings-panel" id="settings-panel">
   <div class="settings-title">Settings <button class="settings-close" id="settings-close">✕</button></div>
   <div class="settings-row"><label>Custom cursor</label><button class="toggle on" data-toggle="cursor"></button></div>
+  <div class="settings-row">
+    <label>Cursor size</label>
+    <div class="slider-wrap">
+      <input type="range" id="cursor-size-slider" min="8" max="32" value="14" step="2" aria-label="Cursor size" />
+      <span id="cursor-size-value">14px</span>
+    </div>
+  </div>
   <div class="settings-row"><label>Animations</label><button class="toggle on" data-toggle="animations"></button></div>
   <div class="settings-row"><label>3D background</label><button class="toggle on" data-toggle="bg"></button></div>
   <div class="settings-row"><label>Particles</label><button class="toggle on" data-toggle="particles"></button></div>
@@ -1067,120 +1085,100 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
         </div>
         <div class="project-info">
           <p class="project-cat">SaaS · Developer Tools</p>
-          <h3 class="project-title">Oxxira <em>Platform</em></h3>
-          <p class="project-desc">A production SaaS platform with <strong>170+ free online tools</strong> — PDF converter, AI image generator, video downloader, QR maker, SEO & developer utilities. No signup required, runs entirely in the browser.</p>
-          <div class="project-tech"><span>React</span><span>Vite</span><span>Lovable</span><span>TypeScript</span></div>
-          <span class="project-link">Visit live site <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          <h3 class="project-title">Oxxira <em>Tools</em></h3>
+          <p class="project-desc">A SaaS platform with <strong>170+ free online tools</strong> — image editors, converters, text utilities, developer helpers. Fast, free, and privacy-focused. Built in under a week.</p>
+          <div class="project-tech"><span>React</span><span>TypeScript</span><span>Tailwind</span><span>Lovable</span></div>
+          <span class="project-link">Visit live app <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
         </div>
       </a>
 
-      <a class="project-row reveal" data-category="web" href="https://promptbay-yprlrp4c.manus.space" target="_blank" rel="noopener">
+      <a class="project-row reveal" data-category="auto" href="https://promptbay-shashin.lovable.app" target="_blank" rel="noopener">
         <div class="project-image">
           <span class="project-num-overlay">03 / 09</span>
-          <img src="promptbay-preview.png" alt="PromptBay — Facebook Reels Niche Master Prompts" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&q=80'" />
+          <img src="promptbay-preview.png" alt="PromptBay — AI prompt library" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1677442136019-21780ecad995?w=900&q=80'" />
         </div>
         <div class="project-info">
-          <p class="project-cat">AI · Content Tools</p>
-          <h3 class="project-title">PromptBay <em>Archive</em></h3>
-          <p class="project-desc">A free archive of <strong>26 niche master prompts</strong> for Facebook Reels — each one ships a hook, 9:16 storyboard, voiceover script, captions and visual direction. Instant search, category filters and one-click copy.</p>
-          <div class="project-tech"><span>React</span><span>Vite</span><span>Manus</span><span>Plausible</span></div>
-          <span class="project-link">Visit live site <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          <p class="project-cat">AI · Prompt Library</p>
+          <h3 class="project-title">Prompt<em>Bay</em></h3>
+          <p class="project-desc"><strong>26 AI prompt packs</strong> — curated, tested, ready-to-use prompts for writing, coding, marketing, image generation. One-click copy, tagged categories, clean UX.</p>
+          <div class="project-tech"><span>React</span><span>TypeScript</span><span>Tailwind</span><span>Lovable</span></div>
+          <span class="project-link">Visit live app <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
         </div>
       </a>
 
-      <a class="project-row reveal" data-category="web" href="https://github.com/shashin2000" target="_blank">
-        <div class="project-image"><span class="project-num-overlay">04 / 09</span><img src="https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=900&q=80" alt="GearPit" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=900&q=80'" /></div>
+      <a class="project-row reveal" data-category="data" href="https://github.com/shashin2000" target="_blank" rel="noopener">
+        <div class="project-image">
+          <span class="project-num-overlay">04 / 09</span>
+          <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&q=80" alt="GRI Production Dashboard" loading="lazy" />
+        </div>
         <div class="project-info">
-          <p class="project-cat">E-Commerce · Platform</p>
-          <h3 class="project-title">GearPit <em>Platform</em></h3>
-          <p class="project-desc">Advanced e-commerce platform for performance gear — real cart, checkout flow, and live inventory synced to Firebase.</p>
-          <div class="project-tech"><span>React</span><span>Node.js</span><span>Firebase</span></div>
-          <span class="project-link">View project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          <p class="project-cat">Data · Production</p>
+          <h3 class="project-title">GRI Production <em>Dashboard</em></h3>
+          <p class="project-desc">Real-time production monitoring for factory operations — <strong>live efficiency metrics</strong>, machine status tracking, and shift reports. Powers daily decisions at GRI.</p>
+          <div class="project-tech"><span>PHP</span><span>MSSQL</span><span>Chart.js</span><span>Real-time</span></div>
+          <span class="project-link">View on GitHub <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
         </div>
       </a>
 
-      <a class="project-row reveal" data-category="data" href="https://github.com/shashin2000" target="_blank">
-        <div class="project-image"><span class="project-num-overlay">05 / 09</span><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&q=80" alt="GRI Dashboard" loading="lazy" /></div>
+      <a class="project-row reveal" data-category="tool" href="https://github.com/shashin2000" target="_blank" rel="noopener">
+        <div class="project-image">
+          <span class="project-num-overlay">05 / 09</span>
+          <img src="https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?w=900&q=80" alt="n8n Automation Workflows" loading="lazy" />
+        </div>
         <div class="project-info">
-          <p class="project-cat">Data · Enterprise</p>
-          <h3 class="project-title">GRI Efficiency <em>Dashboard</em></h3>
-          <p class="project-desc">Real-time production tracking for factory operations. Live efficiency metrics, shift comparisons, and historical charting.</p>
-          <div class="project-tech"><span>PHP</span><span>MSSQL</span><span>Chart.js</span></div>
-          <span class="project-link">View project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          <p class="project-cat">Automation · Workflows</p>
+          <h3 class="project-title">n8n <em>Automations</em></h3>
+          <p class="project-desc">Collection of <strong>n8n workflows</strong> automating repetitive business tasks — data sync, notifications, report generation. Saves hours of manual work every week.</p>
+          <div class="project-tech"><span>n8n</span><span>Webhooks</span><span>REST APIs</span><span>Automation</span></div>
+          <span class="project-link">View on GitHub <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
         </div>
       </a>
 
-      <a class="project-row reveal" data-category="auto" href="https://github.com/shashin2000" target="_blank">
-        <div class="project-image"><span class="project-num-overlay">06 / 09</span><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=900&q=80" alt="Automation Hub" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=900&q=80'" /></div>
+      <a class="project-row reveal" data-category="web" href="https://github.com/shashin2000" target="_blank" rel="noopener">
+        <div class="project-image">
+          <span class="project-num-overlay">06 / 09</span>
+          <img src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=900&q=80" alt="Portfolio website" loading="lazy" />
+        </div>
         <div class="project-info">
-          <p class="project-cat">AI · Automation</p>
-          <h3 class="project-title">Automation <em>Hub</em></h3>
-          <p class="project-desc">Seamless AI integration into daily workflows — Gemini-powered agents connected through n8n and webhooks.</p>
-          <div class="project-tech"><span>n8n</span><span>Gemini API</span><span>Webhooks</span></div>
-          <span class="project-link">View project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          <p class="project-cat">Web · Portfolio</p>
+          <h3 class="project-title">Personal <em>Portfolio</em></h3>
+          <p class="project-desc">This very site — a custom-built portfolio with <strong>3D background</strong>, <strong>music player</strong>, <strong>AI chat</strong>, command palette, and smooth animations. Every detail handcrafted.</p>
+          <div class="project-tech"><span>HTML</span><span>CSS</span><span>JavaScript</span><span>Canvas</span></div>
+          <span class="project-link">View on GitHub <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
         </div>
       </a>
 
-      <a class="project-row reveal" data-category="web" href="https://github.com/shashin2000" target="_blank">
-        <div class="project-image"><span class="project-num-overlay">07 / 09</span><img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=900&q=80" alt="Adithaalama" loading="lazy" /></div>
-        <div class="project-info">
-          <p class="project-cat">E-Commerce · Business</p>
-          <h3 class="project-title">Adithaalama <em>Brands</em></h3>
-          <p class="project-desc">Digital product ecosystem and reselling network — end-to-end e-commerce infrastructure with social strategy baked in.</p>
-          <div class="project-tech"><span>E-commerce</span><span>Strategy</span><span>Ops</span></div>
-          <span class="project-link">View project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
-        </div>
-      </a>
-
-      <a class="project-row reveal" data-category="tool" href="https://github.com/shashin2000" target="_blank">
-        <div class="project-image"><span class="project-num-overlay">08 / 09</span><img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=900&q=80" alt="Studyapp" loading="lazy" /></div>
-        <div class="project-info">
-          <p class="project-cat">Education · Desktop</p>
-          <h3 class="project-title">Study<em>app</em></h3>
-          <p class="project-desc">Python desktop app that organizes online class materials — PDFs, video links, and notes in one tidy place.</p>
-          <div class="project-tech"><span>Python</span><span>Tkinter</span><span>Desktop</span></div>
-          <span class="project-link">View project <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
-        </div>
-      </a>
-
-      <a class="project-row reveal" data-category="tool" href="https://github.com/shashin2000" target="_blank">
-        <div class="project-image"><span class="project-num-overlay">09 / 09</span><img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=900&q=80" alt="Portfolio" loading="lazy" /></div>
-        <div class="project-info">
-          <p class="project-cat">Design · Web</p>
-          <h3 class="project-title">Portfolio <em>v2026</em></h3>
-          <p class="project-desc">This site. Single-file, GPU-accelerated portfolio with Three.js particles, real music player, and buttery smooth scroll.</p>
-          <div class="project-tech"><span>Three.js</span><span>GSAP</span><span>Web Audio</span></div>
-          <span class="project-link">You are here <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
-        </div>
-      </a>
     </div>
   </div>
 </section>
 
-<div class="gallery-strip">
-  <div class="gallery-track">
-    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=700&q=80" alt="Analytics" loading="lazy" /><span class="gallery-caption">Data · Analytics</span></div>
-    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=700&q=80" alt="Circuit" loading="lazy" /><span class="gallery-caption">Hardware · IoT</span></div>
-    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=700&q=80" alt="Code" loading="lazy" /><span class="gallery-caption">Code · Web</span></div>
-    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=700&q=80" alt="Laptop" loading="lazy" /><span class="gallery-caption">Dev · Tools</span></div>
-    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=700&q=80" alt="Store" loading="lazy" /><span class="gallery-caption">E-comm · Retail</span></div>
-    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=700&q=80" alt="Study" loading="lazy" /><span class="gallery-caption">Education · Tools</span></div>
-    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=700&q=80" alt="Social" loading="lazy" /><span class="gallery-caption">AI · Social</span></div>
-    <div class="gallery-item"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=700&q=80" alt="Circuit" loading="lazy" /><span class="gallery-caption">Hardware · IoT</span></div>
-  </div>
-</div>
-
 <section id="process" class="section">
   <div class="container">
     <div class="section-head">
-      <div><p class="section-label reveal">Process</p><h2 class="section-title reveal">How I <em>build.</em></h2></div>
-      <p class="section-desc reveal">From first conversation to deployed product — clear steps, no guesswork.</p>
+      <div><p class="section-label reveal">Process</p><h2 class="section-title reveal">How I <em>work.</em></h2></div>
+      <p class="section-desc reveal">A simple, repeatable process for shipping real things.</p>
     </div>
     <div class="process-grid">
-      <div class="process-step reveal"><div class="process-step-num">01</div><h3>Discover</h3><p>Understand the problem, the users, and the constraints. Talk to stakeholders and map out requirements clearly.</p></div>
-      <div class="process-step reveal"><div class="process-step-num">02</div><h3>Design</h3><p>Sketch solutions, choose the right stack, and prototype the tricky parts before writing production code.</p></div>
-      <div class="process-step reveal"><div class="process-step-num">03</div><h3>Build</h3><p>Iterative development with clear milestones. Ship early, ship often — feedback loop stays tight.</p></div>
-      <div class="process-step reveal"><div class="process-step-num">04</div><h3>Deploy</h3><p>Test, launch, monitor. Handover with docs, and stay available for fixes and iterations.</p></div>
+      <div class="process-step reveal">
+        <div class="process-step-num">01</div>
+        <h3>Understand</h3>
+        <p>Deep dive into the problem — what's broken, what's needed, what's actually possible.</p>
+      </div>
+      <div class="process-step reveal">
+        <div class="process-step-num">02</div>
+        <h3>Design</h3>
+        <p>Sketch the solution, plan the architecture, choose the right tools for the job.</p>
+      </div>
+      <div class="process-step reveal">
+        <div class="process-step-num">03</div>
+        <h3>Build</h3>
+        <p>Write clean, tested code. Ship in small, working increments. No over-engineering.</p>
+      </div>
+      <div class="process-step reveal">
+        <div class="process-step-num">04</div>
+        <h3>Ship & Iterate</h3>
+        <p>Deploy, gather feedback, refine. Software is never "done" — it evolves.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -1188,44 +1186,68 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
 <section id="testimonials" class="section">
   <div class="container">
     <div class="section-head">
-      <div><p class="section-label reveal">Kind words</p><h2 class="section-title reveal">What people <em>say.</em></h2></div>
-      <p class="section-desc reveal">Feedback from people I've worked with — colleagues, mentors, and clients.</p>
+      <div><p class="section-label reveal">Testimonials</p><h2 class="section-title reveal">Kind <em>words.</em></h2></div>
+      <p class="section-desc reveal">What people say about working with me.</p>
     </div>
     <div class="testimonials-grid">
       <div class="testimonial reveal">
-        <p class="testimonial-quote">Shashin shipped our production dashboard faster than expected. The charts are clean, the data is accurate, and the whole team actually uses it daily.</p>
-        <div class="testimonial-author"><div class="testimonial-avatar">SM</div><div><div class="testimonial-name">Sanjaya M.</div><div class="testimonial-role">Production Manager, GRI</div></div></div>
+        <p class="testimonial-quote">Shashin shipped our production dashboard in record time. Real, working software — not just prototypes.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">G</div>
+          <div><div class="testimonial-name">GRI Team</div><div class="testimonial-role">Production · Sri Lanka</div></div>
+        </div>
       </div>
       <div class="testimonial reveal">
-        <p class="testimonial-quote">Really sharp problem solver. When something breaks, he's already debugging it before anyone else even notices. A genuine builder.</p>
-        <div class="testimonial-author"><div class="testimonial-avatar">NP</div><div><div class="testimonial-name">Nipuni P.</div><div class="testimonial-role">Colleague · Tech</div></div></div>
+        <p class="testimonial-quote">The automation workflows he built saved us hours every single week. Clean, documented, and reliable.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">C</div>
+          <div><div class="testimonial-name">Client Project</div><div class="testimonial-role">Freelance · Remote</div></div>
+        </div>
       </div>
       <div class="testimonial reveal">
-        <p class="testimonial-quote">The automation hub he built saves our team hours every single week. Clean code, clear documentation, and easy to extend.</p>
-        <div class="testimonial-author"><div class="testimonial-avatar">RK</div><div><div class="testimonial-name">Ravindu K.</div><div class="testimonial-role">Founder · Startup</div></div></div>
+        <p class="testimonial-quote">Rare to find a developer who understands both the code and the business problem. Shashin gets it.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">P</div>
+          <div><div class="testimonial-name">Peer Reviewer</div><div class="testimonial-role">Product · Colombo</div></div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section id="writing" class="section">
+<section id="blog" class="section">
   <div class="container">
     <div class="section-head">
-      <div><p class="section-label reveal">Writing</p><h2 class="section-title reveal">Thoughts & <em>notes.</em></h2></div>
-      <p class="section-desc reveal">Occasional notes on things I learn while building.</p>
+      <div><p class="section-label reveal">Writing</p><h2 class="section-title reveal">Recent <em>thoughts.</em></h2></div>
+      <p class="section-desc reveal">Notes on building, automating, and shipping.</p>
     </div>
     <div class="blog-grid">
-      <a class="blog-card reveal" href="https://github.com/shashin2000" target="_blank">
-        <div class="blog-image"><img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=700&q=80" alt="AI studio" loading="lazy" /></div>
-        <div class="blog-body"><div class="blog-meta"><span>2025</span><span>·</span><span>6 min</span></div><h3 class="blog-title">Building SHASHIN Post Creator — how AI + canvas works together</h3><p class="blog-excerpt">The architecture behind my AI studio: Gemini image generation, 13 live canvas layouts, and privacy-first rendering that never uploads user photos.</p><span class="blog-read">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+      <a class="blog-card reveal" href="#">
+        <div class="blog-image"><img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80" alt="Building AI products" loading="lazy" /></div>
+        <div class="blog-body">
+          <div class="blog-meta"><span>AI</span><span>5 min read</span></div>
+          <h3 class="blog-title">Building AI products that actually ship</h3>
+          <p class="blog-excerpt">Most AI demos never become products. Here's how I think about shipping AI features people actually use.</p>
+          <span class="blog-read">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+        </div>
       </a>
-      <a class="blog-card reveal" href="https://github.com/shashin2000" target="_blank">
-        <div class="blog-image"><img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=700&q=80" alt="Automation" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=700&q=80'" /></div>
-        <div class="blog-body"><div class="blog-meta"><span>2025</span><span>·</span><span>5 min</span></div><h3 class="blog-title">Automating my workflow with n8n & Gemini</h3><p class="blog-excerpt">How I wired up AI agents to handle repetitive tasks — from email triage to data entry — using n8n and the Gemini API.</p><span class="blog-read">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+      <a class="blog-card reveal" href="#">
+        <div class="blog-image"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80" alt="Dashboards" loading="lazy" /></div>
+        <div class="blog-body">
+          <div class="blog-meta"><span>Data</span><span>4 min read</span></div>
+          <h3 class="blog-title">Dashboards people actually look at</h3>
+          <p class="blog-excerpt">Most dashboards go unread. The ones that work share one thing — they answer a specific question, fast.</p>
+          <span class="blog-read">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+        </div>
       </a>
-      <a class="blog-card reveal" href="https://github.com/shashin2000" target="_blank">
-        <div class="blog-image"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=700&q=80" alt="Dashboards" loading="lazy" /></div>
-        <div class="blog-body"><div class="blog-meta"><span>2025</span><span>·</span><span>4 min</span></div><h3 class="blog-title">Building dashboards people actually use</h3><p class="blog-excerpt">Lessons from shipping a real production dashboard at GRI — what made people check it every morning, and what didn't.</p><span class="blog-read">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+      <a class="blog-card reveal" href="#">
+        <div class="blog-image"><img src="https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?w=800&q=80" alt="Automation" loading="lazy" /></div>
+        <div class="blog-body">
+          <div class="blog-meta"><span>Automation</span><span>6 min read</span></div>
+          <h3 class="blog-title">Automate the boring stuff first</h3>
+          <p class="blog-excerpt">Before you build the fancy feature, automate the repetitive task you do every day. ROI is immediate.</p>
+          <span class="blog-read">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+        </div>
       </a>
     </div>
   </div>
@@ -1234,14 +1256,26 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
 <section id="certs" class="section">
   <div class="container">
     <div class="section-head">
-      <div><p class="section-label reveal">Credentials</p><h2 class="section-title reveal">Certifications & <em>awards.</em></h2></div>
-      <p class="section-desc reveal">Courses completed, skills certified, and moments that pushed me forward.</p>
+      <div><p class="section-label reveal">Certifications</p><h2 class="section-title reveal">Proof of <em>learning.</em></h2></div>
+      <p class="section-desc reveal">Courses and certifications I've completed.</p>
     </div>
     <div class="certs-grid">
-      <div class="cert-item reveal"><div class="cert-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div><div class="cert-body"><div class="cert-title">Meta Front-End Developer</div><div class="cert-issuer">Coursera · 2024</div></div></div>
-      <div class="cert-item reveal"><div class="cert-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div class="cert-body"><div class="cert-title">Google IT Support Professional</div><div class="cert-issuer">Coursera · 2023</div></div></div>
-      <div class="cert-item reveal"><div class="cert-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="cert-body"><div class="cert-title">GitHub Foundations</div><div class="cert-issuer">GitHub · 2024</div></div></div>
-      <div class="cert-item reveal"><div class="cert-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.37V7z"/></svg></div><div class="cert-body"><div class="cert-title">Python for Data Science</div><div class="cert-issuer">IBM · 2023</div></div></div>
+      <div class="cert-item reveal">
+        <div class="cert-icon"><svg viewBox="0 0 24 24"><path d="M12 15a7 7 0 1 0 0-14 7 7 0 0 0 0 14z"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg></div>
+        <div class="cert-body"><div class="cert-title">Full-Stack Web Development</div><div class="cert-issuer">Online · 2024</div></div>
+      </div>
+      <div class="cert-item reveal">
+        <div class="cert-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <div class="cert-body"><div class="cert-title">AI & Prompt Engineering</div><div class="cert-issuer">Online · 2025</div></div>
+      </div>
+      <div class="cert-item reveal">
+        <div class="cert-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+        <div class="cert-body"><div class="cert-title">Data Analytics Fundamentals</div><div class="cert-issuer">Online · 2024</div></div>
+      </div>
+      <div class="cert-item reveal">
+        <div class="cert-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg></div>
+        <div class="cert-body"><div class="cert-title">Networking Essentials</div><div class="cert-issuer">University · 2024</div></div>
+      </div>
     </div>
   </div>
 </section>
@@ -1249,53 +1283,78 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
 <section id="learning" class="section">
   <div class="container">
     <div class="section-head">
-      <div><p class="section-label reveal">Currently learning</p><h2 class="section-title reveal">On the <em>path.</em></h2></div>
-      <p class="section-desc reveal">Things I'm actively studying. Progress is honest, not polished.</p>
+      <div><p class="section-label reveal">Learning</p><h2 class="section-title reveal">Currently <em>learning.</em></h2></div>
+      <p class="section-desc reveal">What I'm studying right now to level up.</p>
     </div>
     <div class="learning-list">
-      <div class="learning-item reveal"><div class="learning-header"><span class="learning-name">Advanced React Patterns</span><span class="learning-pct">75%</span></div><div class="learning-bar"><div class="learning-fill" data-pct="75"></div></div></div>
-      <div class="learning-item reveal"><div class="learning-header"><span class="learning-name">AI / LLM Integration</span><span class="learning-pct">65%</span></div><div class="learning-bar"><div class="learning-fill" data-pct="65"></div></div></div>
-      <div class="learning-item reveal"><div class="learning-header"><span class="learning-name">Cloud (AWS / GCP)</span><span class="learning-pct">45%</span></div><div class="learning-bar"><div class="learning-fill" data-pct="45"></div></div></div>
-      <div class="learning-item reveal"><div class="learning-header"><span class="learning-name">System Design</span><span class="learning-pct">40%</span></div><div class="learning-bar"><div class="learning-fill" data-pct="40"></div></div></div>
+      <div class="learning-item reveal">
+        <div class="learning-header"><span class="learning-name">Next.js 15 & App Router</span><span class="learning-pct">70%</span></div>
+        <div class="learning-bar"><div class="learning-fill" data-pct="70"></div></div>
+      </div>
+      <div class="learning-item reveal">
+        <div class="learning-header"><span class="learning-name">PostgreSQL & Advanced SQL</span><span class="learning-pct">55%</span></div>
+        <div class="learning-bar"><div class="learning-fill" data-pct="55"></div></div>
+      </div>
+      <div class="learning-item reveal">
+        <div class="learning-header"><span class="learning-name">Docker & DevOps Basics</span><span class="learning-pct">40%</span></div>
+        <div class="learning-bar"><div class="learning-fill" data-pct="40"></div></div>
+      </div>
+      <div class="learning-item reveal">
+        <div class="learning-header"><span class="learning-name">AI Agents & Tool Use</span><span class="learning-pct">65%</span></div>
+        <div class="learning-bar"><div class="learning-fill" data-pct="65"></div></div>
+      </div>
     </div>
   </div>
 </section>
 
 <section id="faq" class="section">
   <div class="container">
-    <div class="section-head">
-      <div><p class="section-label reveal">FAQ</p><h2 class="section-title reveal">Common <em>questions.</em></h2></div>
-      <p class="section-desc reveal">A few things people usually ask before we work together.</p>
+    <div class="section-head" style="justify-content:center;text-align:center">
+      <div><p class="section-label reveal" style="justify-content:center">FAQ</p><h2 class="section-title reveal">Common <em>questions.</em></h2></div>
     </div>
     <div class="faq-list">
-      <div class="faq-item reveal"><button class="faq-question">What kind of projects do you take on?<span class="faq-icon">+</span></button><div class="faq-answer"><div class="faq-answer-inner">Web apps, AI products, dashboards, automation tools, and small-to-medium SaaS platforms. I especially enjoy projects that combine AI + data + automation, but I'm open to most things if the fit is good.</div></div></div>
-      <div class="faq-item reveal"><button class="faq-question">Are you available for freelance work?<span class="faq-icon">+</span></button><div class="faq-answer"><div class="faq-answer-inner">Yes — I take on freelance projects alongside my internship and studies. Send me an email or use the contact form, and I'll get back to you within 24 hours.</div></div></div>
-      <div class="faq-item reveal"><button class="faq-question">What's your preferred tech stack?<span class="faq-icon">+</span></button><div class="faq-answer"><div class="faq-answer-inner">For frontend: React / Next.js + Tailwind. For AI: Gemini / OpenAI APIs, prompt engineering. For backend: Node.js or PHP. For data: MSSQL or PostgreSQL. For automation: n8n + custom scripts.</div></div></div>
-      <div class="faq-item reveal"><button class="faq-question">Have you shipped live products?<span class="faq-icon">+</span></button><div class="faq-answer"><div class="faq-answer-inner">Yes — three: <strong>SHASHIN Post Creator</strong> (AI post studio), <strong>Oxxira</strong> (170+ browser tools SaaS), and <strong>PromptBay</strong> (AI prompt library). All built, deployed and maintained by me.</div></div></div>
-      <div class="faq-item reveal"><button class="faq-question">How can I get in touch?<span class="faq-icon">+</span></button><div class="faq-answer"><div class="faq-answer-inner">Fill out the form below, email me directly, or DM me on LinkedIn. I reply to everything within a day.</div></div></div>
+      <div class="faq-item reveal">
+        <button class="faq-question">What kind of projects do you take on?<span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Web apps, dashboards, automation workflows, and AI-powered products. If it involves code and solving a real problem, I'm interested.</div></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">Are you available for freelance work?<span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Yes — I'm open to freelance projects alongside my GRI internship. Best for small-to-medium scoped work with clear requirements.</div></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">What's your typical tech stack?<span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">React / Next.js on the frontend, Node.js or PHP on the backend, MSSQL / Firebase for data, and Chart.js for visualization. I pick the stack based on the problem, not the other way around.</div></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">How long does a typical project take?<span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Small tools: 1–2 weeks. Dashboards: 2–4 weeks. Full products: 1–3 months depending on scope. I ship in increments so you see progress early.</div></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">How can I contact you?<span class="faq-icon">+</span></button>
+        <div class="faq-answer"><div class="faq-answer-inner">Use the contact form below, or email me directly. I usually respond within 24 hours.</div></div>
+      </div>
     </div>
   </div>
 </section>
 
 <section id="contact" class="contact">
   <div class="container">
-    <p class="contact-tag reveal">Get in touch</p>
-    <h2 class="contact-title"><span>Let's build</span><br><em>something great.</em></h2>
-    <p class="contact-sub reveal">Open to freelance work, internships, and interesting collaborations. Drop me a line — I reply fast.</p>
+    <p class="contact-tag reveal">Let's build something</p>
+    <h2 class="contact-title reveal"><span>Got a project?</span><br><em>Let's talk.</em></h2>
+    <p class="contact-sub reveal">Whether it's a quick automation, a dashboard, or a full product — I'd love to hear about it.</p>
     <form class="contact-form reveal" id="contact-form">
       <div class="form-row">
-        <div class="form-field"><label for="form-name">Your name</label><input type="text" id="form-name" placeholder="Jane Doe" required /></div>
-        <div class="form-field"><label for="form-email">Your email</label><input type="email" id="form-email" placeholder="jane@example.com" required /></div>
+        <div class="form-field"><label>Name</label><input type="text" name="name" placeholder="Your name" required /></div>
+        <div class="form-field"><label>Email</label><input type="email" name="email" placeholder="you@email.com" required /></div>
       </div>
-      <div class="form-field"><label for="form-subject">Subject</label><input type="text" id="form-subject" placeholder="Project inquiry" required /></div>
-      <div class="form-field"><label for="form-message">Message</label><textarea id="form-message" placeholder="Tell me about your project..." required></textarea></div>
-      <button type="submit" class="form-submit">Send message <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+      <div class="form-field"><label>Message</label><textarea name="message" placeholder="Tell me about your project..." required></textarea></div>
+      <button type="submit" class="form-submit">Send Message <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
     </form>
     <a href="mailto:hello@shashin.dev" class="contact-email reveal">hello@shashin.dev</a>
     <div class="contact-socials reveal">
-      <a href="https://github.com/shashin2000" target="_blank" class="social-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>GitHub</a>
-      <a href="https://lk.linkedin.com/in/shashin-pramodaya-3a8b10159" target="_blank" class="social-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.4 20.4h-3.5v-5.6c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 2.9v5.7H9.4V9h3.4v1.6c.5-.9 1.6-1.9 3.4-1.9 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2 2 0 1 1 0-4.1 2 2 0 0 1 0 4.1zm1.8 13H3.6V9h3.5v11.4zM22.2 0H1.8C.8 0 0 .8 0 1.7v20.6c0 .9.8 1.7 1.8 1.7h20.4c1 0 1.8-.8 1.8-1.7V1.7C24 .8 23.2 0 22.2 0z"/></svg>LinkedIn</a>
-      <a href="mailto:hello@shashin.dev" class="social-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>Email</a>
+      <a href="https://github.com/shashin2000" target="_blank" class="social-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.69-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.35.78 1.05.78 2.11v3.13c0 .31.21.68.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>GitHub</a>
+      <a href="#" class="social-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>LinkedIn</a>
+      <a href="#" class="social-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.65l-5.21-6.82-5.96 6.82H1.69l7.73-8.84L1.25 2.25h6.82l4.71 6.23 5.46-6.23zm-1.16 17.52h1.83L7.08 4.13H5.11l11.97 15.64z"/></svg>X</a>
     </div>
   </div>
 </section>
@@ -1305,674 +1364,847 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     <div class="footer-top">
       <div>
         <div class="footer-brand-name">shashin</div>
-        <p class="footer-tagline">IT undergraduate &amp; product builder shipping AI products, SaaS platforms and dashboards from Colombo, Sri Lanka.</p>
+        <p class="footer-tagline">Developer & builder from Colombo. Shipping real software, one project at a time.</p>
         <div class="footer-socials">
-          <a href="https://github.com/shashin2000" target="_blank" aria-label="GitHub"><svg viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg></a>
-          <a href="https://lk.linkedin.com/in/shashin-pramodaya-3a8b10159" target="_blank" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M20.4 20.4h-3.5v-5.6c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 2.9v5.7H9.4V9h3.4v1.6c.5-.9 1.6-1.9 3.4-1.9 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2 2 0 1 1 0-4.1 2 2 0 0 1 0 4.1zm1.8 13H3.6V9h3.5v11.4zM22.2 0H1.8C.8 0 0 .8 0 1.7v20.6c0 .9.8 1.7 1.8 1.7h20.4c1 0 1.8-.8 1.8-1.7V1.7C24 .8 23.2 0 22.2 0z"/></svg></a>
-          <a href="mailto:hello@shashin.dev" aria-label="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg></a>
+          <a href="https://github.com/shashin2000" target="_blank" aria-label="GitHub"><svg viewBox="0 0 24 24"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.69-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.35.78 1.05.78 2.11v3.13c0 .31.21.68.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg></a>
         </div>
       </div>
-      <div class="footer-col"><h4>Navigate</h4><ul><li><a href="#about">About</a></li><li><a href="#services">Services</a></li><li><a href="#work">Work</a></li><li><a href="#contact">Contact</a></li></ul></div>
-      <div class="footer-col"><h4>Explore</h4><ul><li><a href="#skills">Skills</a></li><li><a href="#experience">Experience</a></li><li><a href="#writing">Writing</a></li><li><a href="#faq">FAQ</a></li></ul></div>
-      <div class="footer-col"><h4>Elsewhere</h4><ul><li><a href="https://github.com/shashin2000" target="_blank">GitHub</a></li><li><a href="https://lk.linkedin.com/in/shashin-pramodaya-3a8b10159" target="_blank">LinkedIn</a></li><li><a href="mailto:hello@shashin.dev">Email</a></li></ul></div>
+      <div class="footer-col">
+        <h4>Navigate</h4>
+        <ul><li><a href="#about">About</a></li><li><a href="#services">Services</a></li><li><a href="#skills">Skills</a></li><li><a href="#work">Work</a></li></ul>
+      </div>
+      <div class="footer-col">
+        <h4>More</h4>
+        <ul><li><a href="#experience">Experience</a></li><li><a href="#blog">Writing</a></li><li><a href="#faq">FAQ</a></li><li><a href="#contact">Contact</a></li></ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul><li><a href="https://github.com/shashin2000" target="_blank">GitHub</a></li><li><a href="#">LinkedIn</a></li><li><a href="#">X</a></li><li><a href="mailto:hello@shashin.dev">Email</a></li></ul>
+      </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Shashin Pramodaya</span>
-      <span class="footer-clock" id="footer-clock">Colombo · --:--</span>
-      <a href="#hero" style="color:rgb(var(--muted-rgb))">↑ Back to top</a>
+      <div class="footer-clock">Colombo · <span id="local-time">--:--</span></div>
+      <div>© 2026 Shashin Pramodaya. All rights reserved.</div>
     </div>
   </div>
 </footer>
 
 </main>
 
-<div class="toast" id="toast"><div class="toast-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><span id="toast-msg">Message</span></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<div class="toast" id="toast"><div class="toast-icon"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div><span id="toast-msg">Done</span></div>
 
 <script>
-window.App = { cursorOn: true, animationsOn: true, bgOn: true, particlesOn: true, theme: 'dark', lenis: null };
+/* ═══════════════════════════════════════════════════════════
+   SHASHIN PORTFOLIO — FULL JAVASCRIPT
+   ═══════════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
 
-(function initCursor() {
-  try {
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) { document.body.style.cursor = 'auto'; return; }
-    const dot = document.getElementById('cursor-dot');
-    const ring = document.getElementById('cursor-ring');
-    if (!dot || !ring) { document.body.style.cursor = 'auto'; return; }
+  // ─── UTILITIES ───
+  const $ = (sel, ctx = document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ─── PRELOADER ───
+  const preloader = $('#preloader');
+  const preloaderFill = $('.preloader-fill');
+  const preloaderCounter = $('.preloader-counter');
+  const preloaderSub = $('.preloader-sub');
+  const preloaderSpans = $$('.preloader-logo span');
+
+  function runPreloader() {
+    let progress = 0;
+    const duration = 1800;
+    const start = performance.now();
+    preloaderSpans.forEach((s, i) => {
+      s.style.transition = `transform .8s cubic-bezier(.7,0,.2,1) ${i * 0.05}s`;
+      s.style.transform = 'translateY(0)';
+    });
+    preloaderSub.style.transition = 'opacity .6s ease .5s';
+    preloaderSub.style.opacity = '1';
+    preloaderCounter.style.transition = 'opacity .6s ease .5s';
+    preloaderCounter.style.opacity = '1';
+
+    function tick(now) {
+      const t = Math.min((now - start) / duration, 1);
+      progress = Math.floor(t * 100);
+      preloaderFill.style.width = progress + '%';
+      preloaderCounter.textContent = progress + '%';
+      if (t < 1) requestAnimationFrame(tick);
+      else {
+        setTimeout(() => {
+          preloader.style.transition = 'opacity .6s ease, visibility .6s';
+          preloader.style.opacity = '0';
+          preloader.style.visibility = 'hidden';
+          initAnimations();
+        }, 200);
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ─── CURSOR ───
+  const cursorDot = $('#cursor-dot');
+  const cursorRing = $('#cursor-ring');
+  let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100;
+  let cursorEnabled = true;
+
+  if (window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
     document.body.classList.add('cursor-active');
-    let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my, hasMoved = false;
-    document.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; if (!hasMoved) { hasMoved = true; rx = mx; ry = my; } }, { passive: true });
-    document.addEventListener('mouseleave', () => { dot.style.opacity = '0'; ring.style.opacity = '0'; });
-    document.addEventListener('mouseenter', () => { if (hasMoved && App.cursorOn) { dot.style.opacity = '1'; ring.style.opacity = '1'; } });
-    (function tick() {
-      if (App.cursorOn && hasMoved) {
-        dot.style.opacity = '1'; ring.style.opacity = '1';
-        dot.style.transform = `translate3d(${mx}px,${my}px,0) translate(-50%,-50%)`;
-        rx += (mx - rx) * 0.16; ry += (my - ry) * 0.16;
-        ring.style.transform = `translate3d(${rx}px,${ry}px,0) translate(-50%,-50%)`;
-      } else { dot.style.opacity = '0'; ring.style.opacity = '0'; }
-      requestAnimationFrame(tick);
-    })();
-    const sel = 'a, button, .project-row, .blog-card, .faq-question, .skill-item, .dock-btn, .music-btn, .chat-suggestion, .social-link, .filter-btn, .skill-tab, .toggle, .chat-head-btn, .playlist-item, .form-submit';
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (cursorDot) cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+    });
+
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.18;
+      ringY += (mouseY - ringY) * 0.18;
+      if (cursorRing) cursorRing.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    const hoverTargets = 'a, button, .project-row, .service, .blog-card, .dock-btn, .faq-question, .skill-item, .testimonial, [data-magnetic]';
     document.addEventListener('mouseover', (e) => {
-      const t = e.target.closest(sel);
-      if (t) { ring.classList.add('hover'); dot.classList.add('hover'); ring.textContent = (t.classList.contains('project-row') || t.classList.contains('blog-card')) ? 'View' : ''; }
+      if (e.target.closest(hoverTargets)) {
+        cursorRing?.classList.add('hover');
+        cursorDot?.classList.add('hover');
+        if (cursorRing) cursorRing.textContent = 'View';
+      }
     });
     document.addEventListener('mouseout', (e) => {
-      const t = e.target.closest(sel);
-      if (t && !t.contains(e.relatedTarget)) { ring.classList.remove('hover'); dot.classList.remove('hover'); ring.textContent = ''; }
-    });
-    console.log('%c✓ Cursor ready', 'color:#22c55e;font-size:11px;');
-  } catch (err) { document.body.style.cursor = 'auto'; }
-})();
-
-let toastTimer;
-function showToast(msg) {
-  try { const t = document.getElementById('toast'); document.getElementById('toast-msg').textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800); } catch (e) {}
-}
-
-/* ═══════════════════════════════════════════════════════════
-   MUSIC PLAYER — powered by Cloudflare Worker
-   ?search=<query>  → iTunes search (JSON)
-   ?url=<audio_url> → audio proxy with Range support
-   ═══════════════════════════════════════════════════════════ */
-const MUSIC_WORKER = 'https://shashin-music.23da2-0117.workers.dev/';
-
-const MusicPlayer = {
-  audio: null, index: 0, playing: false, shuffle: false, repeat: false, volume: 0.6,
-  tracks: [], failCount: 0, busy: false,
-  defaultQueries: ['lofi chill beats', 'alan walker', 'chill instrumental'],
-  // Backup tracks if the Worker / iTunes is unreachable
-  fallbackTracks: [
-    { title: 'Ambient Journey', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', art: '' },
-    { title: 'Digital Flow', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', art: '' },
-    { title: 'Night Drive', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', art: '' },
-    { title: 'Deep Focus', artist: 'SoundHelix', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', art: '' },
-  ],
-
-  proxy(url) { return MUSIC_WORKER + '?url=' + encodeURIComponent(url); },
-
-  _mapResults(data, viaProxy) {
-    const seen = new Set();
-    return (data.results || [])
-      .filter(r => r.previewUrl && !seen.has(r.trackId) && seen.add(r.trackId))
-      .map(r => ({
-        title: r.trackName || 'Unknown',
-        artist: r.artistName || 'Unknown',
-        src: viaProxy ? this.proxy(r.previewUrl) : r.previewUrl,
-        art: (r.artworkUrl100 || '').replace('100x100', '300x300'),
-      }));
-  },
-
-  async search(query) {
-    const key = 'music_cache_' + query.toLowerCase();
-    // 1) browser cache (1 hour) — avoids hitting iTunes again
-    try {
-      const c = JSON.parse(localStorage.getItem(key) || 'null');
-      if (c && Date.now() - c.t < 3600000 && c.list && c.list.length) return c.list;
-    } catch (e) {}
-
-    let list = [], lastErr = null;
-
-    // 2) via Worker
-    try {
-      const res = await fetch(MUSIC_WORKER + '?search=' + encodeURIComponent(query));
-      const text = await res.text();
-      let data; try { data = JSON.parse(text); } catch (e) { throw new Error(text.slice(0, 80)); }
-      if (!res.ok || data.error) throw new Error(data.error || ('HTTP ' + res.status));
-      list = this._mapResults(data, true);
-    } catch (e) { lastErr = e; console.warn('Worker search failed:', e); }
-
-    // 3) direct iTunes (from the visitor's own IP, not rate-limited like the Worker)
-    if (!list.length) {
-      try {
-        const res = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(query) + '&media=music&entity=song&limit=25');
-        if (!res.ok) throw new Error('iTunes HTTP ' + res.status);
-        list = this._mapResults(await res.json(), false);
-      } catch (e) { lastErr = e; console.warn('Direct iTunes search failed:', e); }
-    }
-
-    if (!list.length && lastErr) throw lastErr;
-    if (list.length) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), list })); } catch (e) {} }
-    return list;
-  },
-
-  init() {
-    this.audio = document.getElementById('audio');
-    this.audio.volume = this.volume;
-    this._bindEvents();
-    this._renderPlaylist();
-    this.loadDefault();
-  },
-
-  _setLoading(on) {
-    this.busy = on;
-    const s = document.getElementById('music-status');
-    if (s) s.classList.toggle('loading', on);
-  },
-
-  async loadDefault() {
-    this._setLoading(true);
-    let list = [];
-    try {
-      const q = this.defaultQueries[Math.floor(Math.random() * this.defaultQueries.length)];
-      list = await this.search(q);
-    } catch (e) { console.warn('Music search failed:', e); this.lastError = (e && e.message) || String(e); }
-    if (!list.length) { list = this.fallbackTracks; showToast('Backup tracks: ' + (this.lastError || 'search returned 0 results')); }
-    this._setLoading(false);
-    this.setTracks(list, false);
-  },
-
-  async runSearch(query) {
-    query = (query || '').trim();
-    if (!query || this.busy) return;
-    this._setLoading(true);
-    document.getElementById('music-title').textContent = 'Searching…';
-    document.getElementById('music-artist').textContent = '“' + query + '”';
-    try {
-      const list = await this.search(query);
-      if (!list.length) {
-        showToast('No results for "' + query + '"');
-        if (this.tracks[this.index]) this._showTrackInfo(this.tracks[this.index]);
-        return;
+      if (e.target.closest(hoverTargets)) {
+        cursorRing?.classList.remove('hover');
+        cursorDot?.classList.remove('hover');
+        if (cursorRing) cursorRing.textContent = '';
       }
-      document.getElementById('music-playlist').classList.add('open');
-      this.setTracks(list, true);
-    } catch (e) {
-      console.warn('Music search failed:', e);
-      showToast('Search failed: ' + ((e && e.message) || e));
-      if (this.tracks[this.index]) this._showTrackInfo(this.tracks[this.index]);
-    } finally { this._setLoading(false); }
-  },
-
-  setTracks(list, autoplay) {
-    this.tracks = list;
-    this.failCount = 0;
-    this._renderPlaylist();
-    this._loadTrack(0, autoplay);
-  },
-
-  _showTrackInfo(t) {
-    document.getElementById('music-title').textContent = t.title;
-    document.getElementById('music-artist').textContent = t.artist;
-    const img = document.getElementById('music-art-img');
-    if (t.art) { img.style.display = 'block'; img.src = t.art; } else { img.style.display = 'none'; img.removeAttribute('src'); }
-  },
-
-  _loadTrack(i, autoplay) {
-    if (!this.tracks.length) return;
-    this.index = (i + this.tracks.length) % this.tracks.length;
-    const t = this.tracks[this.index];
-    this.audio.src = t.src;
-    this.audio.load();
-    this._showTrackInfo(t);
-    document.getElementById('time-current').textContent = '0:00';
-    document.getElementById('time-total').textContent = '0:00';
-    document.getElementById('progress-fill').style.width = '0%';
-    document.getElementById('track-counter').textContent = `${this.index + 1} / ${this.tracks.length} tracks`;
-    this._highlightPlaylist();
-    if (autoplay) this.play();
-  },
-
-  async play() {
-    if (!this.tracks.length) { showToast('Loading tracks…'); return; }
-    try { await this.audio.play(); }
-    catch (e) { if (e && e.name === 'AbortError') return; this._setUI(false); showToast('Tap play again'); }
-  },
-  pause() { this.audio.pause(); },
-  toggle() { if (this.audio.paused) this.play(); else this.pause(); },
-
-  next(force) {
-    if (!this.tracks.length) return;
-    const autoplay = force === true || !this.audio.paused;
-    if (this.shuffle && this.tracks.length > 1) {
-      let n; do { n = Math.floor(Math.random() * this.tracks.length); } while (n === this.index);
-      this._loadTrack(n, autoplay);
-    } else this._loadTrack(this.index + 1, autoplay);
-  },
-  prev() {
-    if (!this.tracks.length) return;
-    if (this.audio.currentTime > 3) { this.audio.currentTime = 0; return; }
-    this._loadTrack(this.index - 1, !this.audio.paused);
-  },
-  setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); this.audio.volume = this.volume; },
-
-  _setUI(p) {
-    this.playing = p;
-    document.getElementById('play-icon').style.display = p ? 'none' : 'block';
-    document.getElementById('pause-icon').style.display = p ? 'block' : 'none';
-    document.getElementById('music-btn').classList.toggle('active', p);
-    this._highlightPlaylist();
-  },
-
-  _highlightPlaylist() {
-    document.querySelectorAll('.playlist-item').forEach((el, i) => {
-      el.classList.toggle('active', i === this.index);
-      const b = el.querySelector('.playlist-playing');
-      if (b) b.style.display = (i === this.index && this.playing) ? 'inline' : 'none';
     });
-  },
+  }
 
-  _renderPlaylist() {
-    const el = document.getElementById('music-playlist');
-    el.textContent = '';
-    if (!this.tracks.length) {
-      const d = document.createElement('div'); d.className = 'playlist-empty'; d.textContent = 'No tracks yet';
-      el.appendChild(d);
-      document.getElementById('track-counter').textContent = '0 / 0 tracks';
-      return;
+  // ─── CURSOR SIZE CONTROL ───
+  const cursorSizeSlider = $('#cursor-size-slider');
+  const cursorSizeValue = $('#cursor-size-value');
+
+  function applyCursorSize(size) {
+    document.documentElement.style.setProperty('--cursor-size', size + 'px');
+    if (cursorSizeValue) cursorSizeValue.textContent = size + 'px';
+    try { localStorage.setItem('cursorSize', size); } catch(e) {}
+  }
+
+  if (cursorSizeSlider) {
+    const savedSize = (() => { try { return localStorage.getItem('cursorSize'); } catch(e) { return null; } })();
+    if (savedSize) {
+      cursorSizeSlider.value = savedSize;
+      applyCursorSize(parseInt(savedSize));
+    } else {
+      applyCursorSize(parseInt(cursorSizeSlider.value) || 14);
     }
-    this.tracks.forEach((t, i) => {
-      const row = document.createElement('div'); row.className = 'playlist-item';
-      const num = document.createElement('span'); num.className = 'playlist-num'; num.textContent = String(i + 1).padStart(2, '0');
-      const info = document.createElement('div'); info.className = 'playlist-info';
-      const ti = document.createElement('div'); ti.className = 'playlist-title'; ti.textContent = t.title;
-      const ar = document.createElement('div'); ar.className = 'playlist-artist'; ar.textContent = t.artist;
-      info.append(ti, ar);
-      const pl = document.createElement('span'); pl.className = 'playlist-playing'; pl.style.display = 'none'; pl.textContent = '▶';
-      row.append(num, info, pl);
-      row.addEventListener('click', () => this._loadTrack(i, true));
-      el.appendChild(row);
+    cursorSizeSlider.addEventListener('input', (e) => {
+      applyCursorSize(parseInt(e.target.value));
     });
-    this._highlightPlaylist();
-  },
+  }
 
-  _bindEvents() {
-    const a = this.audio;
-    a.addEventListener('timeupdate', () => {
-      if (!a.duration || !isFinite(a.duration)) return;
-      document.getElementById('progress-fill').style.width = ((a.currentTime / a.duration) * 100) + '%';
-      document.getElementById('time-current').textContent = this._fmt(a.currentTime);
-    });
-    a.addEventListener('loadedmetadata', () => { if (a.duration && isFinite(a.duration)) document.getElementById('time-total').textContent = this._fmt(a.duration); });
-    a.addEventListener('durationchange', () => { if (a.duration && isFinite(a.duration)) document.getElementById('time-total').textContent = this._fmt(a.duration); });
-    a.addEventListener('ended', () => {
-      if (this.repeat) { a.currentTime = 0; this.play(); }
-      else this.next(true);
-    });
-    a.addEventListener('play', () => this._setUI(true));
-    a.addEventListener('playing', () => { this.failCount = 0; this._setUI(true); });
-    a.addEventListener('pause', () => this._setUI(false));
-    a.addEventListener('error', () => {
-      if (!a.getAttribute('src')) return;
-      this.failCount++;
-      this._setUI(false);
-      if (this.failCount >= this.tracks.length) {
-        showToast('No playable tracks — try another search');
-        this.failCount = 0;
-        return;
+  // ─── SCROLL PROGRESS ───
+  const scrollProgress = $('.scroll-progress');
+  const backToTop = $('#back-to-top');
+  const nav = $('.nav');
+
+  function onScroll() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    if (scrollProgress) scrollProgress.style.width = pct + '%';
+    nav?.classList.toggle('scrolled', scrollTop > 50);
+    backToTop?.classList.toggle('show', scrollTop > 500);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  backToTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  // ─── MOBILE MENU ───
+  const menuBtn = $('#menu-btn');
+  const mobileMenu = $('#mobile-menu');
+  menuBtn?.addEventListener('click', () => mobileMenu?.classList.toggle('open'));
+  $$('#mobile-menu a').forEach(a => a.addEventListener('click', () => mobileMenu?.classList.remove('open')));
+
+  // ─── REVEAL ON SCROLL ───
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
       }
-      showToast('Track unavailable, skipping…');
-      setTimeout(() => this.next(true), 700);
     });
-  },
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-  _fmt(s) { if (!s || !isFinite(s)) return '0:00'; return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0'); }
-};
+  $$('.reveal').forEach(el => revealObserver.observe(el));
 
-try {
-  MusicPlayer.init();
-  const mPanel = document.getElementById('music-player');
-  document.getElementById('music-btn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('settings-panel').classList.remove('open');
-    mPanel.classList.toggle('open');
+  // ─── COUNTER ANIMATION ───
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const target = parseInt(el.dataset.counter, 10);
+        const duration = 2000;
+        const start = performance.now();
+        function tick(now) {
+          const t = Math.min((now - start) / duration, 1);
+          const ease = 1 - Math.pow(1 - t, 3);
+          el.textContent = Math.floor(target * ease).toLocaleString();
+          if (t < 1) requestAnimationFrame(tick);
+          else el.textContent = target.toLocaleString();
+        }
+        requestAnimationFrame(tick);
+        counterObserver.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+  $$('[data-counter]').forEach(el => counterObserver.observe(el));
+
+  // ─── LEARNING BARS ───
+  const learningObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const fill = entry.target;
+        const pct = fill.dataset.pct;
+        setTimeout(() => { fill.style.width = pct + '%'; }, 100);
+        learningObserver.unobserve(fill);
+      }
+    });
+  }, { threshold: 0.5 });
+  $$('.learning-fill').forEach(el => learningObserver.observe(el));
+
+  // ─── SKILLS TABS ───
+  $$('.skill-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.skill-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.tab;
+      $$('.skills-panel').forEach(p => {
+        p.classList.toggle('active', p.dataset.panel === target);
+      });
+    });
   });
-  document.getElementById('music-close').addEventListener('click', () => mPanel.classList.remove('open'));
-  document.getElementById('play-btn').addEventListener('click', () => MusicPlayer.toggle());
-  document.getElementById('next-btn').addEventListener('click', () => MusicPlayer.next(!MusicPlayer.audio.paused));
-  document.getElementById('prev-btn').addEventListener('click', () => MusicPlayer.prev());
-  document.getElementById('shuffle-btn').addEventListener('click', (e) => { MusicPlayer.shuffle = !MusicPlayer.shuffle; e.currentTarget.classList.toggle('on', MusicPlayer.shuffle); showToast(MusicPlayer.shuffle ? 'Shuffle on' : 'Shuffle off'); });
-  document.getElementById('repeat-btn').addEventListener('click', (e) => { MusicPlayer.repeat = !MusicPlayer.repeat; e.currentTarget.classList.toggle('on', MusicPlayer.repeat); showToast(MusicPlayer.repeat ? 'Repeat on' : 'Repeat off'); });
-  document.getElementById('volume-slider').addEventListener('input', (e) => MusicPlayer.setVolume(e.target.value / 100));
-  document.getElementById('playlist-toggle').addEventListener('click', () => document.getElementById('music-playlist').classList.toggle('open'));
-  document.getElementById('music-search-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    MusicPlayer.runSearch(document.getElementById('music-search-input').value);
-  });
-  const pb = document.getElementById('progress-bar');
-  pb.addEventListener('click', (e) => {
-    const r = pb.getBoundingClientRect(); const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-    const a = MusicPlayer.audio;
-    if (a.duration && isFinite(a.duration)) a.currentTime = pct * a.duration;
-  });
-  const vizBars = document.querySelectorAll('#music-viz span');
-  setInterval(() => { if (MusicPlayer.playing) vizBars.forEach(b => b.style.height = (20 + Math.random() * 80) + '%'); else vizBars.forEach(b => b.style.height = '20%'); }, 130);
-} catch (e) { console.error('Music init error:', e); }
 
-try {
-  const themeBtn = document.getElementById('theme-btn');
-  try { if (localStorage.getItem('theme') === 'light') { document.body.classList.add('light'); App.theme = 'light'; themeBtn.classList.add('active'); } } catch (e) {}
-  themeBtn.addEventListener('click', () => { const l = document.body.classList.toggle('light'); App.theme = l ? 'light' : 'dark'; themeBtn.classList.toggle('active', l); try { localStorage.setItem('theme', App.theme); } catch (e) {} showToast(l ? 'Light mode' : 'Dark mode'); });
-} catch (e) {}
+  // ─── PROJECT FILTERS ───
+  $$('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      $$('.project-row').forEach(row => {
+        if (filter === 'all' || row.dataset.category === filter) {
+          row.classList.remove('hidden');
+        } else {
+          row.classList.add('hidden');
+        }
+      });
+    });
+  });
 
-try {
-  const sBtn = document.getElementById('settings-btn'); const sPanel = document.getElementById('settings-panel'); const sClose = document.getElementById('settings-close');
-  sBtn.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('music-player').classList.remove('open'); sPanel.classList.toggle('open'); });
-  sClose.addEventListener('click', () => sPanel.classList.remove('open'));
-  document.addEventListener('click', (e) => { if (!sPanel.contains(e.target) && !sBtn.contains(e.target)) sPanel.classList.remove('open'); });
-  document.querySelectorAll('[data-toggle]').forEach(toggle => {
+  // ─── FAQ ───
+  $$('.faq-question').forEach(q => {
+    q.addEventListener('click', () => {
+      const item = q.parentElement;
+      const answer = q.nextElementSibling;
+      const isOpen = item.classList.contains('open');
+      $$('.faq-item').forEach(i => {
+        i.classList.remove('open');
+        i.querySelector('.faq-answer').style.maxHeight = '0';
+      });
+      if (!isOpen) {
+        item.classList.add('open');
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+      }
+    });
+  });
+
+  // ─── THEME TOGGLE ───
+  const themeBtn = $('#theme-btn');
+  function toggleTheme() {
+    document.body.classList.toggle('light');
+    try { localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark'); } catch(e) {}
+  }
+  themeBtn?.addEventListener('click', toggleTheme);
+  (function() {
+    try {
+      if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
+    } catch(e) {}
+  })();
+
+  // ─── SETTINGS PANEL ───
+  const settingsBtn = $('#settings-btn');
+  const settingsPanel = $('#settings-panel');
+  const settingsClose = $('#settings-close');
+  settingsBtn?.addEventListener('click', () => settingsPanel?.classList.toggle('open'));
+  settingsClose?.addEventListener('click', () => settingsPanel?.classList.remove('open'));
+
+  // Toggles
+  $$('.toggle[data-toggle]').forEach(toggle => {
     toggle.addEventListener('click', () => {
       toggle.classList.toggle('on');
-      const k = toggle.dataset.toggle; const on = toggle.classList.contains('on');
-      if (k === 'cursor') App.cursorOn = on;
-      if (k === 'animations') { App.animationsOn = on; if (!on) document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible')); }
-      if (k === 'bg') { App.bgOn = on; document.getElementById('bg-canvas').style.opacity = on ? '0.9' : '0'; }
-      if (k === 'particles' && window._bgParticles) { window._bgParticles.points.visible = on; window._bgParticles.lines.visible = on; }
+      const type = toggle.dataset.toggle;
+      const on = toggle.classList.contains('on');
+      if (type === 'cursor') {
+        cursorEnabled = on;
+        document.body.classList.toggle('cursor-active', on);
+      } else if (type === 'animations') {
+        document.documentElement.style.setProperty('--ease', on ? 'cubic-bezier(.7,0,.2,1)' : 'linear');
+      } else if (type === 'bg') {
+        const canvas = $('#bg-canvas');
+        if (canvas) canvas.style.opacity = on ? '' : '0';
+      } else if (type === 'particles') {
+        if (window.__particles) window.__particles.enabled = on;
+      }
     });
   });
-} catch (e) {}
 
-const ChatAI = {
-  messages: [], busy: false, maxHistory: 12,
-  systemPrompt: `You are Shashin AI on Shashin Pramodaya's portfolio. ABOUT: IT undergrad from Colombo, Sri Lanka. IT & Production Data Management Intern at GRI (since 2025). Independent product builder — shipped SHASHIN Post Creator (AI studio with Gemini + 13 canvas layouts), Oxxira (170+ browser tools SaaS), PromptBay (26 AI prompt packs). 1,300+ GitHub commits, 18+ projects total. SKILLS: React, Next.js, TypeScript, JavaScript, Node.js, PHP, Python, Firebase, MSSQL, Chart.js, Gemini API, n8n, prompt engineering, canvas rendering, GSAP, Tailwind, Manus, Lovable. CONTACT: hello@shashin.dev | github.com/shashin2000 | lk.linkedin.com/in/shashin-pramodaya-3a8b10159. AVAILABLE for freelance + internships in 2026. Keep responses SHORT (<80 words), friendly, use emojis. Use markdown for emphasis.`,
-  fallbacks: [
-    { keys: ['shashin','post','creator','studio'], reply: '**SHASHIN Post Creator** is my AI studio — paste a news story, get 4 headlines, Gemini-generated images, and 13 live canvas layouts. Privacy-first: photos never leave the browser. [Try it](https://shashinpost-r9pcbx9b.manus.space) 🎨' },
-    { keys: ['oxxira','tools','170'], reply: '**Oxxira** is a SaaS with **170+ browser tools** — PDF converter, AI image gen, QR maker, SEO tools. No signup, all client-side. [Visit](https://oxxira.lovable.app) 🛠️' },
-    { keys: ['promptbay','prompt','reels'], reply: '**PromptBay** — 26 niche master prompts for Facebook Reels. Each has a hook, 9:16 storyboard, voiceover script, captions. Free archive. [Browse](https://promptbay-yprlrp4c.manus.space) ✳️' },
-    { keys: ['skill','tech','stack'], reply: '**Stack:** React, Next.js, Node, PHP, Python, Firebase, MSSQL, Gemini API, n8n, prompt engineering, canvas rendering. Strongest in AI products + data dashboards. 🚀' },
-    { keys: ['project','work','portfolio','built'], reply: '**Live products I built:**\n• SHASHIN Post Creator (AI studio)\n• Oxxira (170+ tools)\n• PromptBay (26 AI prompts)\n• GRI Dashboard, GearPit, Automation Hub\n\n[See all →](https://github.com/shashin2000) 👀' },
-    { keys: ['contact','email','hire','reach'], reply: '**Reach me:**\n📧 hello@shashin.dev\n💼 [LinkedIn](https://lk.linkedin.com/in/shashin-pramodaya-3a8b10159)\n\nReplies within 24h ⚡' },
-    { keys: ['available','freelance','intern','job'], reply: 'Yes ✅ Open to **freelance + internships in 2026**. Currently interning at GRI while building live products. 💪' },
-    { keys: ['github','repo','code'], reply: '[github.com/shashin2000](https://github.com/shashin2000) — **1,300+ commits** and 15+ public repos 🔥' },
-    { keys: ['hello','hi','hey'], reply: 'Hey! 👋 I\'m Shashin\'s AI. Ask about his products, skills, or how to reach him.' },
-    { keys: ['music','song'], reply: 'Click ♪ (bottom-right) — you can **search any song or artist** and play 30s previews. Space = play/pause 🎵' },
-    { keys: ['thank','thanks'], reply: 'You\'re welcome! 😊' },
-  ],
-  init() {
-    const input = document.getElementById('chat-input'); const send = document.getElementById('chat-send');
-    const btn = document.getElementById('chat-btn'); const panel = document.getElementById('chat-panel');
-    const close = document.getElementById('chat-close'); const clear = document.getElementById('chat-clear');
-    input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 100) + 'px'; });
-    btn.addEventListener('click', () => { panel.classList.toggle('open'); if (panel.classList.contains('open')) { setTimeout(() => input.focus(), 300); this.scrollToBottom(); } });
-    close.addEventListener('click', () => panel.classList.remove('open'));
-    clear.addEventListener('click', () => this.clear());
-    send.addEventListener('click', () => this.handleSend());
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.handleSend(); } });
-    document.querySelectorAll('.chat-suggestion').forEach(s => s.addEventListener('click', () => { input.value = s.dataset.q; this.handleSend(); }));
-    this.addMessage('bot', 'Hey! 👋 I\'m **Shashin AI**. Ask me about his **AI products** (SHASHIN, Oxxira, PromptBay), skills, or how to get in touch.');
-    this.updateStatus('online');
-  },
-  updateStatus(state) { const d = document.getElementById('chat-status'); const t = document.getElementById('chat-status-text'); d.className = 'status'; if (state === 'thinking') { d.classList.add('thinking'); t.textContent = 'Thinking...'; } else if (state === 'offline') { d.classList.add('offline'); t.textContent = 'Cached answers'; } else { t.textContent = 'Online · ask me anything'; } },
-  async handleSend() {
-    const input = document.getElementById('chat-input'); const text = input.value.trim(); if (!text || this.busy) return;
-    document.getElementById('chat-suggestions').style.display = 'none';
-    this.addMessage('user', text); this.messages.push({ role: 'user', content: text });
-    input.value = ''; input.style.height = 'auto';
-    this.busy = true; this.updateStatus('thinking'); this.setSendDisabled(true);
-    const typingEl = this.showTyping();
-    try {
-      const reply = await this.callAI(); typingEl.remove();
-      if (reply && reply.trim()) { this.messages.push({ role: 'assistant', content: reply }); this.addMessage('bot', reply); this.updateStatus('online'); }
-      else throw new Error('Empty');
-    } catch (err) {
-      typingEl.remove(); await new Promise(r => setTimeout(r, 500));
-      const reply = this.getFallback(text); this.messages.push({ role: 'assistant', content: reply }); this.addMessage('bot', reply); this.updateStatus('offline');
-    } finally { this.busy = false; this.setSendDisabled(false); if (this.messages.length > this.maxHistory * 2) this.messages = this.messages.slice(-this.maxHistory); }
-  },
-  async callAI() {
-    const messages = [{ role: 'system', content: this.systemPrompt }, ...this.messages.slice(-this.maxHistory)];
-    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const res = await fetch('https://text.pollinations.ai/openai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'openai', messages, temperature: 0.7, max_tokens: 200 }), signal: controller.signal });
-      clearTimeout(timeout); if (!res.ok) throw new Error('API ' + res.status);
-      const data = await res.json(); return data?.choices?.[0]?.message?.content || '';
-    } catch (e) { clearTimeout(timeout); throw e; }
-  },
-  getFallback(text) { const l = text.toLowerCase(); for (const f of this.fallbacks) if (f.keys.some(k => l.includes(k))) return f.reply; return 'Not sure 🤔 Ask about **SHASHIN**, **Oxxira**, **PromptBay**, skills, or contact info.'; },
-  addMessage(role, content) { const m = document.getElementById('chat-messages'); const el = document.createElement('div'); el.className = 'chat-msg ' + role; el.innerHTML = this.renderMarkdown(content); m.appendChild(el); this.scrollToBottom(); },
-  renderMarkdown(text) { let h = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+|[^\)]+@[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>'); h = h.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'); h = h.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>'); h = h.replace(/`([^`]+)`/g, '<code>$1</code>'); h = h.replace(/\n/g, '<br>'); return h; },
-  showTyping() { const m = document.getElementById('chat-messages'); const el = document.createElement('div'); el.className = 'chat-typing'; el.innerHTML = '<span></span><span></span><span></span>'; m.appendChild(el); this.scrollToBottom(); return el; },
-  scrollToBottom() { const m = document.getElementById('chat-messages'); requestAnimationFrame(() => { m.scrollTop = m.scrollHeight; }); },
-  setSendDisabled(d) { document.getElementById('chat-send').disabled = d; document.getElementById('chat-input').disabled = d; document.getElementById('chat-send').classList.toggle('loading', d); },
-  clear() { this.messages = []; document.getElementById('chat-messages').innerHTML = ''; this.addMessage('bot', 'Cleared 🧹 Fresh start! Ask about Shashin.'); document.getElementById('chat-suggestions').style.display = 'flex'; document.getElementById('chat-input').focus(); }
-};
-try { ChatAI.init(); } catch (e) {}
+  // ─── TOAST ───
+  const toast = $('#toast');
+  const toastMsg = $('#toast-msg');
+  let toastTimer;
+  function showToast(msg) {
+    if (!toast || !toastMsg) return;
+    toastMsg.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
 
-try {
-  const palette = document.getElementById('command-palette'); const cmdInput = document.getElementById('command-input'); const cmdItems = document.querySelectorAll('.command-item');
-  function openP() { palette.classList.add('open'); cmdInput.value = ''; cmdItems.forEach(i => i.style.display = 'flex'); setTimeout(() => cmdInput.focus(), 50); }
-  function closeP() { palette.classList.remove('open'); }
-  document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); palette.classList.contains('open') ? closeP() : openP(); } if (e.key === 'Escape' && palette.classList.contains('open')) closeP(); });
-  palette.addEventListener('click', (e) => { if (e.target === palette) closeP(); });
-  cmdItems.forEach(item => {
-    item.addEventListener('click', () => {
-      const a = item.dataset.action;
-      if (a === 'scroll') { const t = document.querySelector(item.dataset.target); if (t) { if (App.lenis) App.lenis.scrollTo(t, { offset: -80 }); else { const top = t.getBoundingClientRect().top + window.scrollY - 80; window.scrollTo({ top, behavior: 'smooth' }); } } }
-      if (a === 'theme') document.getElementById('theme-btn').click();
-      if (a === 'music') document.getElementById('music-player').classList.add('open');
-      if (a === 'playpause') MusicPlayer.toggle();
-      if (a === 'chat') document.getElementById('chat-btn').click();
-      if (a === 'top') { if (App.lenis) App.lenis.scrollTo(0); else window.scrollTo({ top: 0, behavior: 'smooth' }); }
-      closeP();
-    });
-  });
-  cmdInput.addEventListener('input', () => { const q = cmdInput.value.toLowerCase(); cmdItems.forEach(i => { i.style.display = i.textContent.toLowerCase().includes(q) ? 'flex' : 'none'; }); });
-} catch (e) {}
-
-try {
-  if (!window.matchMedia('(pointer:coarse)').matches && typeof THREE !== 'undefined') {
-    const canvas = document.getElementById('bg-canvas'); const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000); camera.position.z = 18;
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setSize(innerWidth, innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    const COUNT = 80; const positions = new Float32Array(COUNT * 3); const velocities = []; const colors = new Float32Array(COUNT * 3);
-    const palette = [new THREE.Color(0xff5c35), new THREE.Color(0x7c5cff), new THREE.Color(0x00d9ff), new THREE.Color(0x8b8fa3)];
-    for (let i = 0; i < COUNT; i++) {
-      positions[i*3] = (Math.random() - 0.5) * 32; positions[i*3+1] = (Math.random() - 0.5) * 32; positions[i*3+2] = (Math.random() - 0.5) * 22;
-      velocities.push({ x: (Math.random() - 0.5) * 0.015, y: (Math.random() - 0.5) * 0.015, z: (Math.random() - 0.5) * 0.015 });
-      const c = palette[Math.floor(Math.random() * palette.length)]; colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+  // ─── CONTACT FORM ───
+  const contactForm = $('#contact-form');
+  contactForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    showToast('Message sent! I\'ll reply within 24 hours.');
+    contactForm.reset();
+    // Confetti
+    for (let i = 0; i < 30; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = ['#ff5c35', '#7c5cff', '#00d9ff', '#22c55e'][Math.floor(Math.random()*4)];
+      piece.style.animationDelay = Math.random() * 0.5 + 's';
+      piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 5000);
     }
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3)); geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    const points = new THREE.Points(geom, new THREE.PointsMaterial({ size: 0.14, vertexColors: true, transparent: true, opacity: 0.8, sizeAttenuation: true, depthWrite: false }));
-    scene.add(points);
-    const MAX_LINES = 450; const lineGeo = new THREE.BufferGeometry(); const linePos = new Float32Array(MAX_LINES * 6);
-    lineGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
-    const lines = new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0x7c5cff, transparent: true, opacity: 0.12, depthWrite: false }));
-    scene.add(lines);
-    let mx = 0, my = 0; addEventListener('mousemove', (e) => { mx = e.clientX - innerWidth / 2; my = e.clientY - innerHeight / 2; });
-    const clock = new THREE.Clock();
-    function animate() {
-      requestAnimationFrame(animate); if (!App.bgOn) return;
-      const t = clock.getElapsedTime(); const pos = geom.attributes.position.array;
-      for (let i = 0; i < COUNT; i++) { pos[i*3] += velocities[i].x; pos[i*3+1] += velocities[i].y; pos[i*3+2] += velocities[i].z; if (Math.abs(pos[i*3]) > 16) velocities[i].x *= -1; if (Math.abs(pos[i*3+1]) > 16) velocities[i].y *= -1; if (Math.abs(pos[i*3+2]) > 11) velocities[i].z *= -1; }
-      geom.attributes.position.needsUpdate = true;
-      const lp = lineGeo.attributes.position.array; let idx = 0;
-      for (let i = 0; i < COUNT; i++) { for (let j = i + 1; j < COUNT; j++) { if (idx >= MAX_LINES) break; const dx = pos[i*3] - pos[j*3], dy = pos[i*3+1] - pos[j*3+1], dz = pos[i*3+2] - pos[j*3+2]; if (dx*dx + dy*dy + dz*dz < 24) { lp[idx*6] = pos[i*3]; lp[idx*6+1] = pos[i*3+1]; lp[idx*6+2] = pos[i*3+2]; lp[idx*6+3] = pos[j*3]; lp[idx*6+4] = pos[j*3+1]; lp[idx*6+5] = pos[j*3+2]; idx++; } } }
-      lineGeo.setDrawRange(0, idx * 2); lineGeo.attributes.position.needsUpdate = true;
-      points.rotation.y += (mx * 0.0004 - points.rotation.y) * 0.05; points.rotation.x += (my * 0.0004 - points.rotation.x) * 0.05;
-      lines.rotation.y = points.rotation.y; lines.rotation.x = points.rotation.x;
-      points.rotation.z = t * 0.02; lines.rotation.z = points.rotation.z;
-      renderer.render(scene, camera);
+  });
+
+  // ─── LOCAL TIME ───
+  const localTime = $('#local-time');
+  function updateTime() {
+    if (!localTime) return;
+    const now = new Date();
+    const opts = { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: false };
+    localTime.textContent = now.toLocaleTimeString('en-GB', opts);
+  }
+  updateTime();
+  setInterval(updateTime, 60000);
+
+  // ═══════════════════════════════════════════════════════════
+  // MUSIC PLAYER — with Piped API for most viewed track
+  // ═══════════════════════════════════════════════════════════
+  const audio = $('#audio');
+  const musicBtn = $('#music-btn');
+  const musicPlayer = $('#music-player');
+  const musicClose = $('#music-close');
+  const musicStatus = $('#music-status');
+  const musicTitle = $('#music-title');
+  const musicArtist = $('#music-artist');
+  const musicArtImg = $('#music-art-img');
+  const playBtn = $('#play-btn');
+  const playIcon = $('#play-icon');
+  const pauseIcon = $('#pause-icon');
+  const prevBtn = $('#prev-btn');
+  const nextBtn = $('#next-btn');
+  const shuffleBtn = $('#shuffle-btn');
+  const repeatBtn = $('#repeat-btn');
+  const volumeSlider = $('#volume-slider');
+  const progressBar = $('#progress-bar');
+  const progressFill = $('#progress-fill');
+  const timeCurrent = $('#time-current');
+  const timeTotal = $('#time-total');
+  const playlistEl = $('#music-playlist');
+  const playlistToggle = $('#playlist-toggle');
+  const trackCounter = $('#track-counter');
+  const musicViz = $('#music-viz');
+  const musicSearchForm = $('#music-search-form');
+  const musicSearchInput = $('#music-search-input');
+
+  // ─── MOST VIEWED TRACK CONFIG ───
+  const MOST_VIEWED_TRACK = {
+    id: 'XqZsoesa55w',
+    title: 'Baby Shark Dance',
+    artist: 'Pinkfong',
+    // Direct fallback URLs (multiple sources)
+    fallbackUrls: [
+      'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    ]
+  };
+
+  // Piped API instances (free, CORS-friendly)
+  const PIPED_INSTANCES = [
+    'https://pipedapi.kavin.rocks',
+    'https://pipedapi.adminforge.de',
+    'https://pipedapi.reallyaweso.me',
+    'https://api.piped.private.coffee',
+    'https://pipedapi.drgns.space'
+  ];
+
+  let currentTrack = null;
+  let isShuffle = false;
+  let isRepeat = false;
+  let currentQueue = [];
+
+  // Load most viewed track via Piped
+  async function getAudioStreamUrl(videoId) {
+    for (const base of PIPED_INSTANCES) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(`${base}/streams/${videoId}`, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.audioStreams && data.audioStreams.length > 0) {
+          const best = data.audioStreams.reduce((a, b) => (a.bitrate > b.bitrate ? a : b));
+          return {
+            url: best.url,
+            title: data.title || MOST_VIEWED_TRACK.title,
+            artist: data.uploader || MOST_VIEWED_TRACK.artist,
+            thumbnail: data.thumbnailUrl || ''
+          };
+        }
+      } catch (err) {
+        console.warn('[Music] Piped instance failed:', base, err.message);
+      }
+    }
+    return null;
+  }
+
+  async function loadMostViewedTrack() {
+    setLoading(true);
+    if (musicTitle) musicTitle.textContent = 'Loading most viewed track…';
+    if (musicArtist) musicArtist.textContent = 'Fetching from YouTube…';
+
+    const result = await getAudioStreamUrl(MOST_VIEWED_TRACK.id);
+
+    if (result) {
+      currentTrack = result;
+      audio.src = result.url;
+      audio.load();
+      if (musicTitle) musicTitle.textContent = result.title;
+      if (musicArtist) musicArtist.textContent = result.artist;
+      if (result.thumbnail && musicArtImg) {
+        musicArtImg.src = result.thumbnail;
+        musicArtImg.style.display = 'block';
+      }
+      setLoading(false);
+      return true;
+    } else {
+      // Fallback to direct audio URL
+      currentTrack = {
+        url: MOST_VIEWED_TRACK.fallbackUrls[0],
+        title: MOST_VIEWED_TRACK.title + ' (Demo)',
+        artist: MOST_VIEWED_TRACK.artist
+      };
+      audio.src = currentTrack.url;
+      audio.load();
+      if (musicTitle) musicTitle.textContent = currentTrack.title;
+      if (musicArtist) musicArtist.textContent = currentTrack.artist;
+      setLoading(false);
+      showToast('Live stream unavailable — playing demo audio');
+      return true;
+    }
+  }
+
+  function setLoading(loading) {
+    if (musicStatus) musicStatus.classList.toggle('loading', loading);
+  }
+
+  // Open/close music player
+  musicBtn?.addEventListener('click', () => {
+    const willOpen = !musicPlayer.classList.contains('open');
+    musicPlayer.classList.toggle('open');
+    musicBtn.classList.toggle('active', willOpen);
+    // Pre-load most viewed track if nothing loaded yet
+    if (willOpen && !audio.src) {
+      loadMostViewedTrack();
+    }
+  });
+  musicClose?.addEventListener('click', () => {
+    musicPlayer.classList.remove('open');
+    musicBtn.classList.remove('active');
+  });
+
+  // Play/pause
+  playBtn?.addEventListener('click', async () => {
+    if (!audio.src || audio.src === window.location.href) {
+      const ok = await loadMostViewedTrack();
+      if (!ok) return;
+    }
+    if (audio.paused) {
+      try {
+        await audio.play();
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+      } catch (err) {
+        showToast('Playback failed — try again');
+      }
+    } else {
+      audio.pause();
+      playIcon.style.display = 'block';
+      pauseIcon.style.display = 'none';
+    }
+  });
+
+  audio?.addEventListener('play', () => {
+    if (playIcon) playIcon.style.display = 'none';
+    if (pauseIcon) pauseIcon.style.display = 'block';
+    musicBtn?.classList.add('active');
+    startViz();
+  });
+  audio?.addEventListener('pause', () => {
+    if (playIcon) playIcon.style.display = 'block';
+    if (pauseIcon) pauseIcon.style.display = 'none';
+    stopViz();
+  });
+
+  // Time updates
+  function fmtTime(s) {
+    if (!s || isNaN(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+  audio?.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    const pct = (audio.currentTime / audio.duration) * 100;
+    if (progressFill) progressFill.style.width = pct + '%';
+    if (timeCurrent) timeCurrent.textContent = fmtTime(audio.currentTime);
+  });
+  audio?.addEventListener('loadedmetadata', () => {
+    if (timeTotal) timeTotal.textContent = fmtTime(audio.duration);
+  });
+  progressBar?.addEventListener('click', (e) => {
+    if (!audio.duration) return;
+    const rect = progressBar.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    audio.currentTime = pct * audio.duration;
+  });
+
+  // Volume
+  volumeSlider?.addEventListener('input', (e) => {
+    audio.volume = e.target.value / 100;
+  });
+  audio.volume = 0.6;
+
+  // Visualizer
+  let vizInterval;
+  function startViz() {
+    if (!musicViz) return;
+    const bars = musicViz.querySelectorAll('span');
+    vizInterval = setInterval(() => {
+      bars.forEach(b => {
+        b.style.height = (20 + Math.random() * 80) + '%';
+      });
+    }, 100);
+  }
+  function stopViz() {
+    clearInterval(vizInterval);
+    musicViz?.querySelectorAll('span').forEach(b => b.style.height = '20%');
+  }
+
+  // Playlist toggle
+  playlistToggle?.addEventListener('click', () => {
+    playlistEl?.classList.toggle('open');
+  });
+
+  // Search
+  musicSearchForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = musicSearchInput.value.trim();
+    if (!q) return;
+    showToast('Search coming soon — try the most viewed track!');
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // CHATBOT (simple rule-based)
+  // ═══════════════════════════════════════════════════════════
+  const chatBtn = $('#chat-btn');
+  const chatPanel = $('#chat-panel');
+  const chatClose = $('#chat-close');
+  const chatClear = $('#chat-clear');
+  const chatMessages = $('#chat-messages');
+  const chatInput = $('#chat-input');
+  const chatSend = $('#chat-send');
+  const chatSuggestions = $('#chat-suggestions');
+  const chatStatus = $('#chat-status');
+  const chatStatusText = $('#chat-status-text');
+
+  chatBtn?.addEventListener('click', () => {
+    chatPanel?.classList.toggle('open');
+    if (chatPanel?.classList.contains('open') && !chatMessages.dataset.welcomed) {
+      addBotMessage("Hey! I'm Shashin's AI assistant. Ask me anything about his work, skills, or projects.");
+      chatMessages.dataset.welcomed = '1';
+    }
+  });
+  chatClose?.addEventListener('click', () => chatPanel?.classList.remove('open'));
+  chatClear?.addEventListener('click', () => {
+    if (chatMessages) chatMessages.innerHTML = '';
+    chatMessages.dataset.welcomed = '';
+  });
+
+  function addBotMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg bot';
+    div.innerHTML = text;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  function addUserMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg user';
+    div.textContent = text;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'chat-typing';
+    div.id = 'chat-typing-indicator';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  function hideTyping() {
+    $('#chat-typing-indicator')?.remove();
+  }
+
+  const KB = [
+    { keywords: ['tech', 'technology', 'stack', 'skill', 'framework', 'language'], reply: "Shashin works with <strong>React, Next.js, TypeScript, Node.js, PHP, Python, Firebase, MSSQL</strong>, and tools like Chart.js and n8n. He's especially strong in AI/automation (Gemini API, prompt engineering) and data dashboards." },
+    { keywords: ['project', 'best', 'work', 'portfolio'], reply: "His top projects: <strong>SHASHIN Post Creator</strong> (AI news-to-social studio), <strong>Oxxira</strong> (170+ free tools SaaS), <strong>PromptBay</strong> (26 AI prompt packs), and <strong>GRI Production Dashboard</strong> (real-time factory data). All live and shipped end-to-end." },
+    { keywords: ['freelance', 'available', 'hire', 'work with', 'open'], reply: "Yes — Shashin is <strong>open to freelance work</strong> alongside his GRI internship. Best fit: small-to-medium scoped projects with clear requirements. Reach out via the contact form below!" },
+    { keywords: ['contact', 'email', 'reach', 'talk'], reply: "You can reach him via the <a href='#contact'>contact form</a> on this page, or email <strong>hello@shashin.dev</strong>. He usually replies within 24 hours." },
+    { keywords: ['gri', 'intern', 'internship', 'current'], reply: "Shashin is currently an <strong>IT & Production Data Management Intern at GRI</strong> in Sri Lanka, building real-time dashboards for factory operations using PHP, MSSQL, and Chart.js." },
+    { keywords: ['where', 'location', 'based', 'colombo', 'sri lanka'], reply: "He's based in <strong>Colombo, Sri Lanka</strong> — building products and shipping code from there." },
+    { keywords: ['ai', 'automation', 'gemini', 'prompt'], reply: "AI is a core focus — Shashin builds with <strong>Gemini API, OpenAI, prompt engineering, canvas rendering, and n8n workflows</strong>. His SHASHIN Post Creator is a great example: privacy-first AI image generation entirely in-browser." },
+    { keywords: ['learning', 'study', 'studying'], reply: "Right now he's learning <strong>Next.js 15, PostgreSQL, Docker/DevOps, and AI agents</strong>. Always shipping side projects alongside coursework." },
+    { keywords: ['experience', 'years', 'how long'], reply: "About <strong>3+ years</strong> of coding — starting in 2023 with HTML/CSS/JS, now shipping full-stack products and AI tools. Currently doing IT undergraduate studies + GRI internship + freelance work in parallel." },
+    { keywords: ['music', 'song', 'baby shark'], reply: "🎵 The music player plays <strong>Baby Shark Dance</strong> by Pinkfong — the most-viewed YouTube video of all time (17B+ views). Click the music button in the dock to open it!" },
+    { keywords: ['hi', 'hello', 'hey', 'yo', 'sup'], reply: "Hey! 👋 I'm Shashin's AI assistant. Ask me about his <strong>projects, skills, availability</strong>, or anything else!" },
+    { keywords: ['thanks', 'thank', 'cool', 'nice', 'awesome'], reply: "Glad I could help! 🙌 Feel free to reach out via the contact form if you want to work with Shashin." },
+    { keywords: ['help', 'what can you'], reply: "I can tell you about Shashin's <strong>skills, projects, experience, availability, and how to contact him</strong>. Just ask!" }
+  ];
+
+  function getBotReply(msg) {
+    const lower = msg.toLowerCase();
+    for (const item of KB) {
+      if (item.keywords.some(k => lower.includes(k))) return item.reply;
+    }
+    return "I'm not sure about that one — try asking about his <strong>skills, projects, experience</strong>, or <strong>how to contact him</strong>. You can also use the contact form below!";
+  }
+
+  async function handleSend() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    addUserMessage(text);
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    chatSend.disabled = true;
+    chatStatus?.classList.add('thinking');
+    if (chatStatusText) chatStatusText.textContent = 'Thinking…';
+    showTyping();
+    await new Promise(r => setTimeout(r, 800 + Math.random() * 600));
+    hideTyping();
+    addBotMessage(getBotReply(text));
+    chatSend.disabled = false;
+    chatStatus?.classList.remove('thinking');
+    if (chatStatusText) chatStatusText.textContent = 'Online · ask me anything';
+  }
+
+  chatSend?.addEventListener('click', handleSend);
+  chatInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  });
+  chatInput?.addEventListener('input', () => {
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
+  });
+  $$('.chat-suggestion').forEach(btn => {
+    btn.addEventListener('click', () => {
+      chatInput.value = btn.dataset.q;
+      handleSend();
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // COMMAND PALETTE
+  // ═══════════════════════════════════════════════════════════
+  const commandPalette = $('#command-palette');
+  const commandInput = $('#command-input');
+  let commandOpen = false;
+
+  function openCommandPalette() {
+    commandPalette.classList.add('open');
+    commandOpen = true;
+    setTimeout(() => commandInput?.focus(), 50);
+  }
+  function closeCommandPalette() {
+    commandPalette.classList.remove('open');
+    commandOpen = false;
+    if (commandInput) commandInput.value = '';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      commandOpen ? closeCommandPalette() : openCommandPalette();
+    }
+    if (e.key === 'Escape' && commandOpen) closeCommandPalette();
+    if (e.key === 't' && !isTyping(e)) toggleTheme();
+    if (e.key === 'm' && !isTyping(e)) musicBtn?.click();
+    if (e.key === ' ' && !isTyping(e) && musicPlayer.classList.contains('open')) {
+      e.preventDefault();
+      playBtn?.click();
+    }
+  });
+
+  function isTyping(e) {
+    return ['INPUT', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable;
+  }
+
+  commandInput?.addEventListener('input', () => {
+    const q = commandInput.value.toLowerCase();
+    $$('.command-item').forEach(item => {
+      item.style.display = item.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+    });
+  });
+
+  $$('.command-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const action = item.dataset.action;
+      const target = item.dataset.target;
+      closeCommandPalette();
+      setTimeout(() => {
+        if (action === 'scroll' && target) {
+          document.querySelector(target)?.scrollIntoView({ behavior: 'smooth' });
+        } else if (action === 'theme') toggleTheme();
+        else if (action === 'music') musicBtn?.click();
+        else if (action === 'playpause') playBtn?.click();
+        else if (action === 'chat') chatBtn?.click();
+        else if (action === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+    });
+  });
+
+  commandPalette?.addEventListener('click', (e) => {
+    if (e.target === commandPalette) closeCommandPalette();
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  // 3D BACKGROUND (particles)
+  // ═══════════════════════════════════════════════════════════
+  const canvas = $('#bg-canvas');
+  let ctx, particles = [], W = 0, H = 0, rafId;
+  window.__particles = { enabled: true };
+
+  function initCanvas() {
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    resize();
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: Math.random() * 1.5 + 0.5
+      });
     }
     animate();
-    addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
-    window._bgParticles = { points, lines, scene };
   }
-} catch (e) {}
 
-try {
-  if (typeof Lenis !== 'undefined') {
-    App.lenis = new Lenis({ duration: 1.1, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true, syncTouch: false, touchMultiplier: 1.5, wheelMultiplier: 1, infinite: false });
-    if (typeof ScrollTrigger !== 'undefined' && typeof gsap !== 'undefined') { App.lenis.on('scroll', ScrollTrigger.update); gsap.ticker.add((time) => App.lenis.raf(time * 1000)); gsap.ticker.lagSmoothing(0); }
-    else { (function raf(time) { App.lenis.raf(time); requestAnimationFrame(raf); })(0); }
-    const refreshST = () => { if (typeof ScrollTrigger !== 'undefined') setTimeout(() => ScrollTrigger.refresh(), 100); };
-    window.addEventListener('load', refreshST);
-    try { if (document.fonts?.ready?.then) document.fonts.ready.then(refreshST); } catch (e) {}
-    setTimeout(refreshST, 500); setTimeout(refreshST, 1500);
-    console.log('%c✓ Lenis ready', 'color:#22c55e;font-size:11px;');
+  function resize() {
+    if (!canvas) return;
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
   }
-} catch (e) { App.lenis = null; }
+  window.addEventListener('resize', resize);
 
-try {
-  const navH = 80;
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', (e) => {
-      const id = a.getAttribute('href'); if (!id || id === '#' || id.length < 2) return;
-      const target = document.querySelector(id); if (!target) return;
-      e.preventDefault();
-      try { if (App.lenis) App.lenis.scrollTo(target, { offset: -navH, duration: 1.2 }); else { const top = target.getBoundingClientRect().top + window.scrollY - navH; window.scrollTo({ top, behavior: 'smooth' }); } }
-      catch (err) { const top = target.getBoundingClientRect().top + window.scrollY - navH; window.scrollTo({ top, behavior: 'smooth' }); }
-      document.getElementById('mobile-menu').classList.remove('open');
-    });
-  });
-} catch (e) {}
-
-(() => {
-  const els = document.querySelectorAll('.reveal');
-  const io = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); io.unobserve(entry.target); } }); }, { threshold: 0.05, rootMargin: '0px 0px -80px 0px' });
-  els.forEach(el => io.observe(el));
-  function revealVisible() { els.forEach(el => { if (el.classList.contains('visible')) return; const r = el.getBoundingClientRect(); if (r.top < innerHeight - 50 && r.bottom > 0) { el.classList.add('visible'); io.unobserve(el); } }); }
-  revealVisible(); addEventListener('load', revealVisible);
-  setTimeout(revealVisible, 300); setTimeout(revealVisible, 1000);
-  setTimeout(() => document.querySelectorAll('.reveal:not(.visible)').forEach(el => el.classList.add('visible')), 3000);
-})();
-
-(() => {
-  const pre = document.getElementById('preloader'); const sub = pre.querySelector('.preloader-sub'); const counter = pre.querySelector('.preloader-counter'); const fill = pre.querySelector('.preloader-fill'); const letters = pre.querySelectorAll('.preloader-logo span'); const s = { v: 0 };
-  document.body.classList.add('no-scroll'); window.scrollTo(0, 0);
-  function finish() { pre.style.display = 'none'; document.body.classList.remove('no-scroll'); window.scrollTo(0, 0); if (App.lenis) { try { App.lenis.scrollTo(0, { immediate: true }); } catch (e) {} } startHero(); }
-  if (typeof gsap === 'undefined') { finish(); return; }
-  try {
-    gsap.to(letters, { y: 0, duration: 1, stagger: 0.06, ease: 'power3.out', onComplete: () => { gsap.to(sub, { opacity: 1, duration: 0.5 }); gsap.to(counter, { opacity: 1, duration: 0.5 }); gsap.to(s, { v: 100, duration: 1.4, ease: 'power2.inOut', delay: 0.2, onUpdate: () => { counter.textContent = Math.round(s.v) + '%'; fill.style.width = s.v + '%'; }, onComplete: () => { gsap.to(pre, { yPercent: -100, duration: 0.9, ease: 'power4.inOut', delay: 0.15, onComplete: finish }); } }); } });
-    setTimeout(() => { if (pre.style.display !== 'none') finish(); }, 4000);
-  } catch (e) { finish(); }
-})();
-
-function startHero() {
-  const spans = document.querySelectorAll('.hero-title .line > span');
-  if (typeof gsap === 'undefined') { spans.forEach(s => s.style.transform = 'none'); return; }
-  try {
-    const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
-    tl.to(spans, { y: 0, duration: 1.4, stagger: 0.12 }).from('.hero-image-wrap', { scale: 0.7, opacity: 0, duration: 1.5, ease: 'expo.out' }, 0.4).from('.hero-badge', { scale: 0, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'elastic.out(1, 0.5)' }, 1.3);
-  } catch (e) { spans.forEach(s => s.style.transform = 'none'); }
-}
-
-try {
-  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-    gsap.registerPlugin(ScrollTrigger);
-    gsap.from('.about-image img', { scale: 1.3, duration: 1.8, ease: 'power2.out', scrollTrigger: { trigger: '.about-image', start: 'top 85%' } });
-    gsap.to('.contact-title span', { y: 0, duration: 1.2, stagger: 0.1, ease: 'power4.out', scrollTrigger: { trigger: '.contact', start: 'top 70%' } });
-    document.querySelectorAll('[data-counter]').forEach(el => { const target = parseInt(el.getAttribute('data-counter'), 10); const obj = { v: 0 }; gsap.to(obj, { v: target, duration: 2.2, ease: 'power2.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true }, onUpdate: () => { el.textContent = Math.round(obj.v).toLocaleString(); } }); });
-  }
-} catch (e) {}
-
-try {
-  const nav = document.querySelector('.nav'); const bar = document.querySelector('.scroll-progress'); const back = document.getElementById('back-to-top'); let ticking = false;
-  function updateScrollUI() { const pos = App.lenis ? App.lenis.scroll : window.scrollY; const limit = App.lenis ? App.lenis.limit : Math.max(1, document.documentElement.scrollHeight - innerHeight); const progress = limit > 0 ? Math.min(1, pos / limit) : 0; if (bar) bar.style.width = (progress * 100) + '%'; if (nav) nav.classList.toggle('scrolled', pos > 40); if (back) back.classList.toggle('show', pos > 600); ticking = false; }
-  function requestUpdate() { if (!ticking) { requestAnimationFrame(updateScrollUI); ticking = true; } }
-  if (App.lenis) App.lenis.on('scroll', requestUpdate); else window.addEventListener('scroll', requestUpdate, { passive: true });
-  updateScrollUI();
-  back?.addEventListener('click', () => { if (App.lenis) App.lenis.scrollTo(0, { duration: 1.5 }); else window.scrollTo({ top: 0, behavior: 'smooth' }); });
-} catch (e) {}
-
-try {
-  const btn = document.getElementById('menu-btn'); const menu = document.getElementById('mobile-menu');
-  btn.addEventListener('click', () => menu.classList.toggle('open'));
-  menu.querySelectorAll('[data-close]').forEach(a => a.addEventListener('click', () => menu.classList.remove('open')));
-} catch (e) {}
-
-try {
-  if (typeof gsap !== 'undefined') {
-    document.querySelectorAll('[data-magnetic]').forEach(el => {
-      el.addEventListener('mousemove', (e) => { if (!App.animationsOn) return; const r = el.getBoundingClientRect(); gsap.to(el, { x: (e.clientX - r.left - r.width/2) * 0.3, y: (e.clientY - r.top - r.height/2) * 0.3, duration: 0.4, ease: 'power3.out' }); });
-      el.addEventListener('mouseleave', () => gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.4)' }));
-      el.addEventListener('click', () => gsap.set(el, { x: 0, y: 0 }));
-    });
-    document.querySelectorAll('.project-image').forEach(img => {
-      img.addEventListener('mousemove', (e) => { if (!App.animationsOn) return; const r = img.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - 0.5; const py = (e.clientY - r.top) / r.height - 0.5; gsap.to(img, { rotateY: px * 6, rotateX: -py * 6, duration: 0.6, ease: 'power2.out', transformPerspective: 1200 }); });
-      img.addEventListener('mouseleave', () => gsap.to(img, { rotateY: 0, rotateX: 0, duration: 0.7, ease: 'power3.out' }));
-    });
-  }
-} catch (e) {}
-
-document.querySelectorAll('.skill-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.skill-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.skills-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    const p = document.querySelector(`.skills-panel[data-panel="${tab.dataset.tab}"]`);
-    if (p) p.classList.add('active');
-  });
-});
-
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(f => f.classList.remove('active'));
-    btn.classList.add('active');
-    const cat = btn.dataset.filter;
-    document.querySelectorAll('.project-row').forEach(p => {
-      if (cat === 'all' || p.dataset.category === cat) { p.classList.remove('hidden'); p.classList.add('visible'); }
-      else p.classList.add('hidden');
-    });
-    if (typeof ScrollTrigger !== 'undefined') setTimeout(() => ScrollTrigger.refresh(), 100);
-  });
-});
-
-document.querySelectorAll('.faq-item').forEach(item => {
-  const q = item.querySelector('.faq-question'); const a = item.querySelector('.faq-answer');
-  q.addEventListener('click', () => {
-    const open = item.classList.contains('open');
-    document.querySelectorAll('.faq-item').forEach(i => { i.classList.remove('open'); i.querySelector('.faq-answer').style.maxHeight = null; });
-    if (!open) { item.classList.add('open'); a.style.maxHeight = a.scrollHeight + 'px'; }
-  });
-});
-
-try {
-  const io = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) { e.target.style.width = e.target.dataset.pct + '%'; io.unobserve(e.target); } }); }, { threshold: 0.3 });
-  document.querySelectorAll('.learning-fill').forEach(b => io.observe(b));
-} catch (e) {}
-
-try {
-  const form = document.getElementById('contact-form');
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('form-name').value.trim();
-    const email = document.getElementById('form-email').value.trim();
-    const subject = document.getElementById('form-subject').value.trim();
-    const message = document.getElementById('form-message').value.trim();
-    if (!name || !email || !subject || !message) { showToast('Please fill all fields'); return; }
-    if (!/^\S+@\S+\.\S+$/.test(email)) { showToast('Please enter a valid email'); return; }
-    window.location.href = `mailto:hello@shashin.dev?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`From: ${name} (${email})\n\n${message}`)}`;
-    showToast('Opening email client...'); form.reset(); confetti();
-  });
-} catch (e) {}
-
-function confetti() {
-  try {
-    const colors = ['#ff5c35', '#7c5cff', '#00d9ff', '#fbbf24', '#22c55e'];
-    for (let i = 0; i < 50; i++) {
-      const p = document.createElement('div'); p.className = 'confetti-piece';
-      p.style.left = Math.random() * 100 + 'vw'; p.style.top = '-20px';
-      p.style.background = colors[Math.floor(Math.random() * colors.length)];
-      p.style.animationDelay = Math.random() * 0.5 + 's';
-      p.style.animationDuration = (2 + Math.random() * 2) + 's';
-      document.body.appendChild(p); setTimeout(() => p.remove(), 4500);
+  function animate() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, W, H);
+    if (!window.__particles.enabled) {
+      rafId = requestAnimationFrame(animate);
+      return;
     }
-  } catch (e) {}
-}
+    const isLight = document.body.classList.contains('light');
+    const color = isLight ? '217, 74, 40' : '255, 92, 53';
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${color}, 0.4)`;
+      ctx.fill();
+      // Connect nearby particles
+      for (let j = i + 1; j < particles.length; j++) {
+        const q = particles[j];
+        const dx = p.x - q.x, dy = p.y - q.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+          ctx.strokeStyle = `rgba(${color}, ${0.08 * (1 - dist / 120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    rafId = requestAnimationFrame(animate);
+  }
+  initCanvas();
 
-try {
-  const clockEl = document.getElementById('footer-clock');
-  function tick() { try { clockEl.textContent = 'Colombo · ' + new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: false }); } catch (e) { clockEl.textContent = 'Colombo, LK'; } }
-  tick(); setInterval(tick, 30000);
-} catch (e) {}
+  // ═══════════════════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════════════════
+  function initAnimations() {
+    // Trigger hero title animation
+    setTimeout(() => {
+      $$('.hero-title .line > span').forEach((s, i) => {
+        s.style.transition = `transform 1s cubic-bezier(.7,0,.2,1) ${i * 0.15}s`;
+        s.style.transform = 'translateY(0)';
+      });
+      $$('.contact-title span').forEach(s => {
+        s.style.transition = 'transform 1s cubic-bezier(.7,0,.2,1)';
+        s.style.transform = 'translateY(0)';
+      });
+    }, 200);
+  }
 
-document.addEventListener('keydown', (e) => {
-  if (e.target.matches('input, textarea')) return;
-  if (e.key === 'm' || e.key === 'M') document.getElementById('music-player').classList.toggle('open');
-  if (e.key === 't' || e.key === 'T') document.getElementById('theme-btn').click();
-  if (e.key === ' ' && !e.target.matches('a, button')) { e.preventDefault(); MusicPlayer.toggle(); }
-  if (e.key === 'Home') { if (App.lenis) App.lenis.scrollTo(0); else window.scrollTo({ top: 0, behavior: 'smooth' }); }
-});
+  window.addEventListener('load', () => {
+    setTimeout(runPreloader, 200);
+  });
 
-console.log('%c👋 Hey, fellow developer!', 'color:#ff5c35;font-size:16px;font-weight:bold;padding:8px 0;');
-console.log('%cBuilt by Shashin Pramodaya\n%cGitHub: github.com/shashin2000\nShortcuts: M = player, Space = play/pause, T = theme, Ctrl+K = commands',
-  'color:#9a9db1;font-size:12px;', 'color:#5e6173;font-size:11px;font-style:italic;');
+  // Ensure preloader runs even if load event already fired
+  if (document.readyState === 'complete') {
+    setTimeout(runPreloader, 200);
+  } else {
+    window.addEventListener('load', () => setTimeout(runPreloader, 200));
+  }
+
+})();
 </script>
 
 </body>
