@@ -14,11 +14,6 @@
 /* ═══════════ RESET & LENIS ═══════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-html.lenis,html.lenis body{height:auto}
-.lenis.lenis-smooth{scroll-behavior:auto !important}
-.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
-.lenis.lenis-stopped{overflow:hidden}
-.lenis.lenis-scrolling iframe{pointer-events:none}
 body{
   font-family:'Inter',system-ui,-apple-system,sans-serif;
   background:rgb(var(--bg-rgb));
@@ -50,9 +45,8 @@ input,textarea{font-family:inherit;outline:none}
   --font-serif:'Instrument Serif',serif;
   --font-mono:'JetBrains Mono',monospace;
   --ease: cubic-bezier(.7,0,.2,1);
-  --cursor-size: 8px;
+  --cursor-size: 14px;
   --cursor-hover-size: 84px;
-  --cursor-scale: 1;
 }
 body.light{
   --bg-rgb: 250 250 252; --surface-rgb: 255 255 255; --surface-2-rgb: 245 245 248;
@@ -64,7 +58,7 @@ body.light{
   --card-shadow: rgba(0,0,0,0.1);
 }
 
-/* ═══════════ CURSOR ═══════════ */
+/* ═══════════ CURSOR (FIXED) ═══════════ */
 .cursor-dot,.cursor-ring{
   position:fixed;top:0;left:0;pointer-events:none;z-index:99999;
   transform:translate3d(-100px,-100px,0);opacity:0;
@@ -72,11 +66,9 @@ body.light{
              background .3s ease,border-color .3s ease;
   display:none;
 }
-@media (hover:hover) and (pointer:fine){
-  body.cursor-active{cursor:none}
-  body.cursor-active .cursor-dot,
-  body.cursor-active .cursor-ring{display:flex}
-}
+body.cursor-active{cursor:none}
+body.cursor-active .cursor-dot,
+body.cursor-active .cursor-ring{display:flex;opacity:1}
 .cursor-dot{
   width:var(--cursor-size);height:var(--cursor-size);border-radius:50%;
   background:#fff;border:1.5px solid var(--accent);
@@ -94,7 +86,7 @@ body.light{
   color:transparent;overflow:hidden;
 }
 .cursor-ring.hover{
-  width:calc(var(--cursor-size) * 10);height:calc(var(--cursor-size) * 10);
+  width:var(--cursor-hover-size);height:var(--cursor-hover-size);
   background:var(--accent);
   border-color:var(--accent);color:#fff;
   box-shadow:0 0 25px rgba(var(--accent-rgb) / 0.6);
@@ -277,8 +269,6 @@ body.light #bg-canvas{opacity:.15}
 .toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:rgb(var(--text-rgb));transition:all .3s var(--ease)}
 .toggle.on{background:var(--accent)}
 .toggle.on::after{left:19px;background:#fff}
-
-/* Cursor size slider */
 .slider-wrap{display:flex;align-items:center;gap:.6rem;flex:1;max-width:150px}
 .slider-wrap input[type="range"]{flex:1;height:3px;-webkit-appearance:none;appearance:none;background:rgb(var(--surface-3-rgb));border-radius:2px;cursor:pointer}
 .slider-wrap input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px rgba(var(--accent-rgb) / 0.5)}
@@ -335,7 +325,6 @@ body.light #bg-canvas{opacity:.15}
 .chat-send:hover:not(:disabled){background:var(--accent-2);transform:scale(1.05)}
 .chat-send:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .chat-send svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2}
-.chat-send.loading svg{animation:spin 1s linear infinite}
 @media (max-width:500px){.chat-panel{left:1rem;bottom:4.5rem;width:calc(100vw - 2rem);height:calc(100vh - 6rem)}}
 
 /* ═══════════ COMMAND PALETTE ═══════════ */
@@ -681,7 +670,6 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
 @keyframes confettiFall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
 
 .hidden{display:none !important}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -1400,113 +1388,128 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
 (function() {
   'use strict';
 
-  // ─── UTILITIES ───
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ─── PRELOADER ───
+  /* ─── PRELOADER (single trigger, no duplicate) ─── */
   const preloader = $('#preloader');
   const preloaderFill = $('.preloader-fill');
   const preloaderCounter = $('.preloader-counter');
   const preloaderSub = $('.preloader-sub');
   const preloaderSpans = $$('.preloader-logo span');
 
+  let preloaderRan = false;
   function runPreloader() {
+    if (preloaderRan) return;
+    preloaderRan = true;
     let progress = 0;
-    const duration = 1800;
+    const duration = 1600;
     const start = performance.now();
     preloaderSpans.forEach((s, i) => {
       s.style.transition = `transform .8s cubic-bezier(.7,0,.2,1) ${i * 0.05}s`;
       s.style.transform = 'translateY(0)';
     });
-    preloaderSub.style.transition = 'opacity .6s ease .5s';
-    preloaderSub.style.opacity = '1';
-    preloaderCounter.style.transition = 'opacity .6s ease .5s';
-    preloaderCounter.style.opacity = '1';
-
+    if (preloaderSub) { preloaderSub.style.transition = 'opacity .6s ease .5s'; preloaderSub.style.opacity = '1'; }
+    if (preloaderCounter) { preloaderCounter.style.transition = 'opacity .6s ease .5s'; preloaderCounter.style.opacity = '1'; }
     function tick(now) {
       const t = Math.min((now - start) / duration, 1);
       progress = Math.floor(t * 100);
-      preloaderFill.style.width = progress + '%';
-      preloaderCounter.textContent = progress + '%';
+      if (preloaderFill) preloaderFill.style.width = progress + '%';
+      if (preloaderCounter) preloaderCounter.textContent = progress + '%';
       if (t < 1) requestAnimationFrame(tick);
       else {
         setTimeout(() => {
           preloader.style.transition = 'opacity .6s ease, visibility .6s';
           preloader.style.opacity = '0';
           preloader.style.visibility = 'hidden';
-          initAnimations();
+          initHeroAnimations();
         }, 200);
       }
     }
     requestAnimationFrame(tick);
   }
 
-  // ─── CURSOR ───
+  if (document.readyState === 'complete') {
+    setTimeout(runPreloader, 300);
+  } else {
+    window.addEventListener('load', () => setTimeout(runPreloader, 300));
+  }
+
+  /* ─── HERO ANIMATIONS ─── */
+  function initHeroAnimations() {
+    setTimeout(() => {
+      $$('.hero-title .line > span').forEach((s, i) => {
+        s.style.transition = `transform 1s cubic-bezier(.7,0,.2,1) ${i * 0.15}s`;
+        s.style.transform = 'translateY(0)';
+      });
+      $$('.contact-title span').forEach(s => {
+        s.style.transition = 'transform 1s cubic-bezier(.7,0,.2,1)';
+        s.style.transform = 'translateY(0)';
+      });
+    }, 100);
+  }
+
+  /* ─── CURSOR (FIXED: opacity now set to 1, robust detection) ─── */
   const cursorDot = $('#cursor-dot');
   const cursorRing = $('#cursor-ring');
   let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100;
-  let cursorEnabled = true;
 
-  if (window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+  const supportsCustomCursor =
+    window.matchMedia('(pointer:fine)').matches ||
+    window.matchMedia('(hover:hover)').matches ||
+    navigator.maxTouchPoints === 0;
+
+  if (supportsCustomCursor && cursorDot && cursorRing) {
     document.body.classList.add('cursor-active');
 
     document.addEventListener('mousemove', (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      if (cursorDot) cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+      cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
     });
 
-    function animateRing() {
+    (function animateRing() {
       ringX += (mouseX - ringX) * 0.18;
       ringY += (mouseY - ringY) * 0.18;
-      if (cursorRing) cursorRing.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
+      cursorRing.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
       requestAnimationFrame(animateRing);
-    }
-    animateRing();
+    })();
 
     const hoverTargets = 'a, button, .project-row, .service, .blog-card, .dock-btn, .faq-question, .skill-item, .testimonial, [data-magnetic]';
     document.addEventListener('mouseover', (e) => {
       if (e.target.closest(hoverTargets)) {
-        cursorRing?.classList.add('hover');
-        cursorDot?.classList.add('hover');
-        if (cursorRing) cursorRing.textContent = 'View';
+        cursorRing.classList.add('hover');
+        cursorDot.classList.add('hover');
+        cursorRing.textContent = 'View';
       }
     });
     document.addEventListener('mouseout', (e) => {
       if (e.target.closest(hoverTargets)) {
-        cursorRing?.classList.remove('hover');
-        cursorDot?.classList.remove('hover');
-        if (cursorRing) cursorRing.textContent = '';
+        cursorRing.classList.remove('hover');
+        cursorDot.classList.remove('hover');
+        cursorRing.textContent = '';
       }
     });
   }
 
-  // ─── CURSOR SIZE CONTROL ───
+  /* ─── CURSOR SIZE CONTROL ─── */
   const cursorSizeSlider = $('#cursor-size-slider');
   const cursorSizeValue = $('#cursor-size-value');
 
   function applyCursorSize(size) {
     document.documentElement.style.setProperty('--cursor-size', size + 'px');
+    document.documentElement.style.setProperty('--cursor-hover-size', Math.round(size * 6) + 'px');
     if (cursorSizeValue) cursorSizeValue.textContent = size + 'px';
     try { localStorage.setItem('cursorSize', size); } catch(e) {}
   }
-
   if (cursorSizeSlider) {
-    const savedSize = (() => { try { return localStorage.getItem('cursorSize'); } catch(e) { return null; } })();
-    if (savedSize) {
-      cursorSizeSlider.value = savedSize;
-      applyCursorSize(parseInt(savedSize));
-    } else {
-      applyCursorSize(parseInt(cursorSizeSlider.value) || 14);
-    }
-    cursorSizeSlider.addEventListener('input', (e) => {
-      applyCursorSize(parseInt(e.target.value));
-    });
+    const saved = (() => { try { return localStorage.getItem('cursorSize'); } catch(e) { return null; } })();
+    if (saved) { cursorSizeSlider.value = saved; applyCursorSize(parseInt(saved)); }
+    else { applyCursorSize(parseInt(cursorSizeSlider.value) || 14); }
+    cursorSizeSlider.addEventListener('input', (e) => applyCursorSize(parseInt(e.target.value)));
   }
 
-  // ─── SCROLL PROGRESS ───
+  /* ─── SCROLL PROGRESS ─── */
   const scrollProgress = $('.scroll-progress');
   const backToTop = $('#back-to-top');
   const nav = $('.nav');
@@ -1516,21 +1519,20 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
     if (scrollProgress) scrollProgress.style.width = pct + '%';
-    nav?.classList.toggle('scrolled', scrollTop > 50);
-    backToTop?.classList.toggle('show', scrollTop > 500);
+    if (nav) nav.classList.toggle('scrolled', scrollTop > 50);
+    if (backToTop) backToTop.classList.toggle('show', scrollTop > 500);
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
+  if (backToTop) backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-  backToTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
-  // ─── MOBILE MENU ───
+  /* ─── MOBILE MENU ─── */
   const menuBtn = $('#menu-btn');
   const mobileMenu = $('#mobile-menu');
-  menuBtn?.addEventListener('click', () => mobileMenu?.classList.toggle('open'));
-  $$('#mobile-menu a').forEach(a => a.addEventListener('click', () => mobileMenu?.classList.remove('open')));
+  if (menuBtn) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('open'));
+  $$('#mobile-menu a').forEach(a => a.addEventListener('click', () => mobileMenu.classList.remove('open')));
 
-  // ─── REVEAL ON SCROLL ───
+  /* ─── REVEAL ON SCROLL ─── */
   const revealObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -1539,10 +1541,9 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
       }
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
   $$('.reveal').forEach(el => revealObserver.observe(el));
 
-  // ─── COUNTER ANIMATION ───
+  /* ─── COUNTER ANIMATION ─── */
   const counterObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -1564,48 +1565,42 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
   }, { threshold: 0.5 });
   $$('[data-counter]').forEach(el => counterObserver.observe(el));
 
-  // ─── LEARNING BARS ───
+  /* ─── LEARNING BARS ─── */
   const learningObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const fill = entry.target;
-        const pct = fill.dataset.pct;
-        setTimeout(() => { fill.style.width = pct + '%'; }, 100);
+        setTimeout(() => { fill.style.width = fill.dataset.pct + '%'; }, 100);
         learningObserver.unobserve(fill);
       }
     });
   }, { threshold: 0.5 });
   $$('.learning-fill').forEach(el => learningObserver.observe(el));
 
-  // ─── SKILLS TABS ───
+  /* ─── SKILLS TABS ─── */
   $$('.skill-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       $$('.skill-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       const target = tab.dataset.tab;
-      $$('.skills-panel').forEach(p => {
-        p.classList.toggle('active', p.dataset.panel === target);
-      });
+      $$('.skills-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === target));
     });
   });
 
-  // ─── PROJECT FILTERS ───
+  /* ─── PROJECT FILTERS ─── */
   $$('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       $$('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const filter = btn.dataset.filter;
       $$('.project-row').forEach(row => {
-        if (filter === 'all' || row.dataset.category === filter) {
-          row.classList.remove('hidden');
-        } else {
-          row.classList.add('hidden');
-        }
+        const show = filter === 'all' || row.dataset.category === filter;
+        row.classList.toggle('hidden', !show);
       });
     });
   });
 
-  // ─── FAQ ───
+  /* ─── FAQ ─── */
   $$('.faq-question').forEach(q => {
     q.addEventListener('click', () => {
       const item = q.parentElement;
@@ -1613,7 +1608,8 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
       const isOpen = item.classList.contains('open');
       $$('.faq-item').forEach(i => {
         i.classList.remove('open');
-        i.querySelector('.faq-answer').style.maxHeight = '0';
+        const a = i.querySelector('.faq-answer');
+        if (a) a.style.maxHeight = '0';
       });
       if (!isOpen) {
         item.classList.add('open');
@@ -1622,34 +1618,28 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     });
   });
 
-  // ─── THEME TOGGLE ───
+  /* ─── THEME TOGGLE ─── */
   const themeBtn = $('#theme-btn');
   function toggleTheme() {
     document.body.classList.toggle('light');
     try { localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark'); } catch(e) {}
   }
-  themeBtn?.addEventListener('click', toggleTheme);
-  (function() {
-    try {
-      if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
-    } catch(e) {}
-  })();
+  if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+  try { if (localStorage.getItem('theme') === 'light') document.body.classList.add('light'); } catch(e) {}
 
-  // ─── SETTINGS PANEL ───
+  /* ─── SETTINGS PANEL ─── */
   const settingsBtn = $('#settings-btn');
   const settingsPanel = $('#settings-panel');
   const settingsClose = $('#settings-close');
-  settingsBtn?.addEventListener('click', () => settingsPanel?.classList.toggle('open'));
-  settingsClose?.addEventListener('click', () => settingsPanel?.classList.remove('open'));
+  if (settingsBtn) settingsBtn.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+  if (settingsClose) settingsClose.addEventListener('click', () => settingsPanel.classList.remove('open'));
 
-  // Toggles
   $$('.toggle[data-toggle]').forEach(toggle => {
     toggle.addEventListener('click', () => {
       toggle.classList.toggle('on');
       const type = toggle.dataset.toggle;
       const on = toggle.classList.contains('on');
       if (type === 'cursor') {
-        cursorEnabled = on;
         document.body.classList.toggle('cursor-active', on);
       } else if (type === 'animations') {
         document.documentElement.style.setProperty('--ease', on ? 'cubic-bezier(.7,0,.2,1)' : 'linear');
@@ -1662,7 +1652,7 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     });
   });
 
-  // ─── TOAST ───
+  /* ─── TOAST ─── */
   const toast = $('#toast');
   const toastMsg = $('#toast-msg');
   let toastTimer;
@@ -1674,39 +1664,39 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
-  // ─── CONTACT FORM ───
+  /* ─── CONTACT FORM ─── */
   const contactForm = $('#contact-form');
-  contactForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    showToast('Message sent! I\'ll reply within 24 hours.');
-    contactForm.reset();
-    // Confetti
-    for (let i = 0; i < 30; i++) {
-      const piece = document.createElement('div');
-      piece.className = 'confetti-piece';
-      piece.style.left = Math.random() * 100 + 'vw';
-      piece.style.background = ['#ff5c35', '#7c5cff', '#00d9ff', '#22c55e'][Math.floor(Math.random()*4)];
-      piece.style.animationDelay = Math.random() * 0.5 + 's';
-      piece.style.animationDuration = (2 + Math.random() * 2) + 's';
-      document.body.appendChild(piece);
-      setTimeout(() => piece.remove(), 5000);
-    }
-  });
+  if (contactForm) {
+    contactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      showToast("Message sent! I'll reply within 24 hours.");
+      contactForm.reset();
+      for (let i = 0; i < 30; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + 'vw';
+        piece.style.background = ['#ff5c35','#7c5cff','#00d9ff','#22c55e'][Math.floor(Math.random()*4)];
+        piece.style.animationDelay = Math.random() * 0.5 + 's';
+        piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 5000);
+      }
+    });
+  }
 
-  // ─── LOCAL TIME ───
+  /* ─── LOCAL TIME ─── */
   const localTime = $('#local-time');
   function updateTime() {
     if (!localTime) return;
     const now = new Date();
-    const opts = { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: false };
-    localTime.textContent = now.toLocaleTimeString('en-GB', opts);
+    localTime.textContent = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: false });
   }
   updateTime();
   setInterval(updateTime, 60000);
 
-  // ═══════════════════════════════════════════════════════════
-  // MUSIC PLAYER — with Piped API for most viewed track
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════
+     MUSIC PLAYER — Audius API (all-time trending, most played)
+     ═══════════════════════════════════════════════════════════ */
   const audio = $('#audio');
   const musicBtn = $('#music-btn');
   const musicPlayer = $('#music-player');
@@ -1718,10 +1708,6 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
   const playBtn = $('#play-btn');
   const playIcon = $('#play-icon');
   const pauseIcon = $('#pause-icon');
-  const prevBtn = $('#prev-btn');
-  const nextBtn = $('#next-btn');
-  const shuffleBtn = $('#shuffle-btn');
-  const repeatBtn = $('#repeat-btn');
   const volumeSlider = $('#volume-slider');
   const progressBar = $('#progress-bar');
   const progressFill = $('#progress-fill');
@@ -1734,52 +1720,55 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
   const musicSearchForm = $('#music-search-form');
   const musicSearchInput = $('#music-search-input');
 
-  // ─── MOST VIEWED TRACK CONFIG ───
-  const MOST_VIEWED_TRACK = {
-    id: 'XqZsoesa55w',
-    title: 'Baby Shark Dance',
-    artist: 'Pinkfong',
-    // Direct fallback URLs (multiple sources)
-    fallbackUrls: [
-      'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    ]
-  };
+  // Audius config
+  const AUDIUS_PROVIDERS = [
+    'https://discoveryprovider.audius.co',
+    'https://discoveryprovider2.audius.co',
+    'https://discoveryprovider3.audius.co'
+  ];
+  const AUDIUS_APP = 'ShashinPortfolio';
 
-  // Piped API instances (free, CORS-friendly)
-  const PIPED_INSTANCES = [
-    'https://pipedapi.kavin.rocks',
-    'https://pipedapi.adminforge.de',
-    'https://pipedapi.reallyaweso.me',
-    'https://api.piped.private.coffee',
-    'https://pipedapi.drgns.space'
+  // Fallback URLs (multiple reliable audio sources)
+  const FALLBACK_URLS = [
+    'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'
   ];
 
   let currentTrack = null;
   let isShuffle = false;
   let isRepeat = false;
-  let currentQueue = [];
 
-  // Load most viewed track via Piped
-  async function getAudioStreamUrl(videoId) {
-    for (const base of PIPED_INSTANCES) {
+  function setLoading(on) {
+    if (musicStatus) musicStatus.classList.toggle('loading', on);
+  }
+
+  /**
+   * Audius API එකෙන් all-time trending track එක ගන්නවා.
+   * Play count එක වැඩිම streamable track එක තෝරනවා.
+   */
+  async function fetchMostPlayedTrack() {
+    for (const base of AUDIUS_PROVIDERS) {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8000);
-        const res = await fetch(`${base}/streams/${videoId}`, { signal: controller.signal });
-        clearTimeout(timeout);
+        const t = setTimeout(() => controller.abort(), 8000);
+        const url = `${base}/v1/tracks/trending?app_name=${AUDIUS_APP}&limit=20&time=allTime`;
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(t);
         if (!res.ok) continue;
-        const data = await res.json();
-        if (data.audioStreams && data.audioStreams.length > 0) {
-          const best = data.audioStreams.reduce((a, b) => (a.bitrate > b.bitrate ? a : b));
-          return {
-            url: best.url,
-            title: data.title || MOST_VIEWED_TRACK.title,
-            artist: data.uploader || MOST_VIEWED_TRACK.artist,
-            thumbnail: data.thumbnailUrl || ''
-          };
-        }
+        const json = await res.json();
+        const tracks = (json.data || []).filter(x => x.is_streamable && x.play_count > 0);
+        if (!tracks.length) continue;
+        tracks.sort((a, b) => (b.play_count || 0) - (a.play_count || 0));
+        const best = tracks[0];
+        return {
+          id: best.id,
+          title: best.title,
+          artist: best.user?.name || 'Audius Artist',
+          thumbnail: best.artwork?.['480x480'] || best.artwork?.['150x150'] || '',
+          streamUrl: `${base}/v1/tracks/${best.id}/stream?app_name=${AUDIUS_APP}`
+        };
       } catch (err) {
-        console.warn('[Music] Piped instance failed:', base, err.message);
+        console.warn('[Audius] provider failed:', base, err.message);
       }
     }
     return null;
@@ -1787,153 +1776,144 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
 
   async function loadMostViewedTrack() {
     setLoading(true);
-    if (musicTitle) musicTitle.textContent = 'Loading most viewed track…';
-    if (musicArtist) musicArtist.textContent = 'Fetching from YouTube…';
+    if (musicTitle) musicTitle.textContent = 'Loading trending track…';
+    if (musicArtist) musicArtist.textContent = 'Fetching from Audius…';
 
-    const result = await getAudioStreamUrl(MOST_VIEWED_TRACK.id);
-
-    if (result) {
-      currentTrack = result;
-      audio.src = result.url;
+    const track = await fetchMostPlayedTrack();
+    if (track) {
+      currentTrack = track;
+      audio.src = track.streamUrl;
       audio.load();
-      if (musicTitle) musicTitle.textContent = result.title;
-      if (musicArtist) musicArtist.textContent = result.artist;
-      if (result.thumbnail && musicArtImg) {
-        musicArtImg.src = result.thumbnail;
+      if (musicTitle) musicTitle.textContent = track.title;
+      if (musicArtist) musicArtist.textContent = track.artist;
+      if (track.thumbnail && musicArtImg) {
+        musicArtImg.src = track.thumbnail;
         musicArtImg.style.display = 'block';
       }
       setLoading(false);
       return true;
-    } else {
-      // Fallback to direct audio URL
-      currentTrack = {
-        url: MOST_VIEWED_TRACK.fallbackUrls[0],
-        title: MOST_VIEWED_TRACK.title + ' (Demo)',
-        artist: MOST_VIEWED_TRACK.artist
-      };
-      audio.src = currentTrack.url;
-      audio.load();
-      if (musicTitle) musicTitle.textContent = currentTrack.title;
-      if (musicArtist) musicArtist.textContent = currentTrack.artist;
-      setLoading(false);
-      showToast('Live stream unavailable — playing demo audio');
-      return true;
     }
+
+    // Fallback
+    const fallbackUrl = FALLBACK_URLS[0];
+    currentTrack = { title: 'Demo Track', artist: 'Fallback', streamUrl: fallbackUrl };
+    audio.src = fallbackUrl;
+    audio.load();
+    if (musicTitle) musicTitle.textContent = currentTrack.title;
+    if (musicArtist) musicArtist.textContent = currentTrack.artist;
+    setLoading(false);
+    showToast('Audius unavailable — playing fallback audio');
+    return true;
   }
 
-  function setLoading(loading) {
-    if (musicStatus) musicStatus.classList.toggle('loading', loading);
+  if (musicBtn) {
+    musicBtn.addEventListener('click', () => {
+      const willOpen = !musicPlayer.classList.contains('open');
+      musicPlayer.classList.toggle('open');
+      musicBtn.classList.toggle('active', willOpen);
+      if (willOpen && !audio.src) loadMostViewedTrack();
+    });
+  }
+  if (musicClose) {
+    musicClose.addEventListener('click', () => {
+      musicPlayer.classList.remove('open');
+      musicBtn.classList.remove('active');
+    });
   }
 
-  // Open/close music player
-  musicBtn?.addEventListener('click', () => {
-    const willOpen = !musicPlayer.classList.contains('open');
-    musicPlayer.classList.toggle('open');
-    musicBtn.classList.toggle('active', willOpen);
-    // Pre-load most viewed track if nothing loaded yet
-    if (willOpen && !audio.src) {
-      loadMostViewedTrack();
-    }
-  });
-  musicClose?.addEventListener('click', () => {
-    musicPlayer.classList.remove('open');
-    musicBtn.classList.remove('active');
-  });
-
-  // Play/pause
-  playBtn?.addEventListener('click', async () => {
-    if (!audio.src || audio.src === window.location.href) {
-      const ok = await loadMostViewedTrack();
-      if (!ok) return;
-    }
-    if (audio.paused) {
-      try {
-        await audio.play();
-        playIcon.style.display = 'none';
-        pauseIcon.style.display = 'block';
-      } catch (err) {
-        showToast('Playback failed — try again');
+  if (playBtn) {
+    playBtn.addEventListener('click', async () => {
+      if (!audio.src || audio.src === window.location.href) {
+        const ok = await loadMostViewedTrack();
+        if (!ok) return;
       }
-    } else {
-      audio.pause();
-      playIcon.style.display = 'block';
-      pauseIcon.style.display = 'none';
-    }
-  });
+      if (audio.paused) {
+        try {
+          await audio.play();
+          if (playIcon) playIcon.style.display = 'none';
+          if (pauseIcon) pauseIcon.style.display = 'block';
+        } catch (err) {
+          console.error('Playback failed:', err);
+          showToast('Playback failed — try again');
+        }
+      } else {
+        audio.pause();
+        if (playIcon) playIcon.style.display = 'block';
+        if (pauseIcon) pauseIcon.style.display = 'none';
+      }
+    });
+  }
 
-  audio?.addEventListener('play', () => {
-    if (playIcon) playIcon.style.display = 'none';
-    if (pauseIcon) pauseIcon.style.display = 'block';
-    musicBtn?.classList.add('active');
-    startViz();
-  });
-  audio?.addEventListener('pause', () => {
-    if (playIcon) playIcon.style.display = 'block';
-    if (pauseIcon) pauseIcon.style.display = 'none';
-    stopViz();
-  });
+  if (audio) {
+    audio.addEventListener('play', () => {
+      if (playIcon) playIcon.style.display = 'none';
+      if (pauseIcon) pauseIcon.style.display = 'block';
+      if (musicBtn) musicBtn.classList.add('active');
+      startViz();
+    });
+    audio.addEventListener('pause', () => {
+      if (playIcon) playIcon.style.display = 'block';
+      if (pauseIcon) pauseIcon.style.display = 'none';
+      stopViz();
+    });
+  }
 
-  // Time updates
   function fmtTime(s) {
     if (!s || isNaN(s)) return '0:00';
     const m = Math.floor(s / 60);
     const sec = Math.floor(s % 60);
     return m + ':' + (sec < 10 ? '0' : '') + sec;
   }
-  audio?.addEventListener('timeupdate', () => {
-    if (!audio.duration) return;
-    const pct = (audio.currentTime / audio.duration) * 100;
-    if (progressFill) progressFill.style.width = pct + '%';
-    if (timeCurrent) timeCurrent.textContent = fmtTime(audio.currentTime);
-  });
-  audio?.addEventListener('loadedmetadata', () => {
-    if (timeTotal) timeTotal.textContent = fmtTime(audio.duration);
-  });
-  progressBar?.addEventListener('click', (e) => {
-    if (!audio.duration) return;
-    const rect = progressBar.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = pct * audio.duration;
-  });
+  if (audio) {
+    audio.addEventListener('timeupdate', () => {
+      if (!audio.duration) return;
+      const pct = (audio.currentTime / audio.duration) * 100;
+      if (progressFill) progressFill.style.width = pct + '%';
+      if (timeCurrent) timeCurrent.textContent = fmtTime(audio.currentTime);
+    });
+    audio.addEventListener('loadedmetadata', () => {
+      if (timeTotal) timeTotal.textContent = fmtTime(audio.duration);
+    });
+  }
+  if (progressBar) {
+    progressBar.addEventListener('click', (e) => {
+      if (!audio.duration) return;
+      const rect = progressBar.getBoundingClientRect();
+      audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+    });
+  }
+  if (volumeSlider) {
+    volumeSlider.addEventListener('input', (e) => { audio.volume = e.target.value / 100; });
+  }
+  if (audio) audio.volume = 0.6;
 
-  // Volume
-  volumeSlider?.addEventListener('input', (e) => {
-    audio.volume = e.target.value / 100;
-  });
-  audio.volume = 0.6;
-
-  // Visualizer
   let vizInterval;
   function startViz() {
     if (!musicViz) return;
     const bars = musicViz.querySelectorAll('span');
     vizInterval = setInterval(() => {
-      bars.forEach(b => {
-        b.style.height = (20 + Math.random() * 80) + '%';
-      });
+      bars.forEach(b => { b.style.height = (20 + Math.random() * 80) + '%'; });
     }, 100);
   }
   function stopViz() {
     clearInterval(vizInterval);
-    musicViz?.querySelectorAll('span').forEach(b => b.style.height = '20%');
+    if (musicViz) musicViz.querySelectorAll('span').forEach(b => b.style.height = '20%');
   }
 
-  // Playlist toggle
-  playlistToggle?.addEventListener('click', () => {
-    playlistEl?.classList.toggle('open');
-  });
+  if (playlistToggle) playlistToggle.addEventListener('click', () => playlistEl.classList.toggle('open'));
 
-  // Search
-  musicSearchForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const q = musicSearchInput.value.trim();
-    if (!q) return;
-    showToast('Search coming soon — try the most viewed track!');
-  });
+  if (musicSearchForm) {
+    musicSearchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = musicSearchInput.value.trim();
+      if (!q) return;
+      showToast('Search coming soon — try the trending track!');
+    });
+  }
 
-  // ═══════════════════════════════════════════════════════════
-  // CHATBOT (simple rule-based)
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════
+     CHATBOT
+     ═══════════════════════════════════════════════════════════ */
   const chatBtn = $('#chat-btn');
   const chatPanel = $('#chat-panel');
   const chatClose = $('#chat-close');
@@ -1941,22 +1921,25 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
   const chatMessages = $('#chat-messages');
   const chatInput = $('#chat-input');
   const chatSend = $('#chat-send');
-  const chatSuggestions = $('#chat-suggestions');
   const chatStatus = $('#chat-status');
   const chatStatusText = $('#chat-status-text');
 
-  chatBtn?.addEventListener('click', () => {
-    chatPanel?.classList.toggle('open');
-    if (chatPanel?.classList.contains('open') && !chatMessages.dataset.welcomed) {
-      addBotMessage("Hey! I'm Shashin's AI assistant. Ask me anything about his work, skills, or projects.");
-      chatMessages.dataset.welcomed = '1';
-    }
-  });
-  chatClose?.addEventListener('click', () => chatPanel?.classList.remove('open'));
-  chatClear?.addEventListener('click', () => {
-    if (chatMessages) chatMessages.innerHTML = '';
-    chatMessages.dataset.welcomed = '';
-  });
+  if (chatBtn) {
+    chatBtn.addEventListener('click', () => {
+      chatPanel.classList.toggle('open');
+      if (chatPanel.classList.contains('open') && !chatMessages.dataset.welcomed) {
+        addBotMessage("Hey! I'm Shashin's AI assistant. Ask me anything about his work, skills, or projects.");
+        chatMessages.dataset.welcomed = '1';
+      }
+    });
+  }
+  if (chatClose) chatClose.addEventListener('click', () => chatPanel.classList.remove('open'));
+  if (chatClear) {
+    chatClear.addEventListener('click', () => {
+      if (chatMessages) chatMessages.innerHTML = '';
+      if (chatMessages) chatMessages.dataset.welcomed = '';
+    });
+  }
 
   function addBotMessage(text) {
     const div = document.createElement('div');
@@ -1981,31 +1964,29 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
   function hideTyping() {
-    $('#chat-typing-indicator')?.remove();
+    const el = $('#chat-typing-indicator');
+    if (el) el.remove();
   }
 
   const KB = [
-    { keywords: ['tech', 'technology', 'stack', 'skill', 'framework', 'language'], reply: "Shashin works with <strong>React, Next.js, TypeScript, Node.js, PHP, Python, Firebase, MSSQL</strong>, and tools like Chart.js and n8n. He's especially strong in AI/automation (Gemini API, prompt engineering) and data dashboards." },
-    { keywords: ['project', 'best', 'work', 'portfolio'], reply: "His top projects: <strong>SHASHIN Post Creator</strong> (AI news-to-social studio), <strong>Oxxira</strong> (170+ free tools SaaS), <strong>PromptBay</strong> (26 AI prompt packs), and <strong>GRI Production Dashboard</strong> (real-time factory data). All live and shipped end-to-end." },
-    { keywords: ['freelance', 'available', 'hire', 'work with', 'open'], reply: "Yes — Shashin is <strong>open to freelance work</strong> alongside his GRI internship. Best fit: small-to-medium scoped projects with clear requirements. Reach out via the contact form below!" },
-    { keywords: ['contact', 'email', 'reach', 'talk'], reply: "You can reach him via the <a href='#contact'>contact form</a> on this page, or email <strong>hello@shashin.dev</strong>. He usually replies within 24 hours." },
-    { keywords: ['gri', 'intern', 'internship', 'current'], reply: "Shashin is currently an <strong>IT & Production Data Management Intern at GRI</strong> in Sri Lanka, building real-time dashboards for factory operations using PHP, MSSQL, and Chart.js." },
-    { keywords: ['where', 'location', 'based', 'colombo', 'sri lanka'], reply: "He's based in <strong>Colombo, Sri Lanka</strong> — building products and shipping code from there." },
-    { keywords: ['ai', 'automation', 'gemini', 'prompt'], reply: "AI is a core focus — Shashin builds with <strong>Gemini API, OpenAI, prompt engineering, canvas rendering, and n8n workflows</strong>. His SHASHIN Post Creator is a great example: privacy-first AI image generation entirely in-browser." },
-    { keywords: ['learning', 'study', 'studying'], reply: "Right now he's learning <strong>Next.js 15, PostgreSQL, Docker/DevOps, and AI agents</strong>. Always shipping side projects alongside coursework." },
-    { keywords: ['experience', 'years', 'how long'], reply: "About <strong>3+ years</strong> of coding — starting in 2023 with HTML/CSS/JS, now shipping full-stack products and AI tools. Currently doing IT undergraduate studies + GRI internship + freelance work in parallel." },
-    { keywords: ['music', 'song', 'baby shark'], reply: "🎵 The music player plays <strong>Baby Shark Dance</strong> by Pinkfong — the most-viewed YouTube video of all time (17B+ views). Click the music button in the dock to open it!" },
-    { keywords: ['hi', 'hello', 'hey', 'yo', 'sup'], reply: "Hey! 👋 I'm Shashin's AI assistant. Ask me about his <strong>projects, skills, availability</strong>, or anything else!" },
-    { keywords: ['thanks', 'thank', 'cool', 'nice', 'awesome'], reply: "Glad I could help! 🙌 Feel free to reach out via the contact form if you want to work with Shashin." },
-    { keywords: ['help', 'what can you'], reply: "I can tell you about Shashin's <strong>skills, projects, experience, availability, and how to contact him</strong>. Just ask!" }
+    { keywords: ['tech','technology','stack','skill','framework','language'], reply: "Shashin works with <strong>React, Next.js, TypeScript, Node.js, PHP, Python, Firebase, MSSQL</strong>, and tools like Chart.js and n8n. Strong in AI/automation (Gemini API, prompt engineering) and data dashboards." },
+    { keywords: ['project','best','work','portfolio'], reply: "Top projects: <strong>SHASHIN Post Creator</strong>, <strong>Oxxira</strong> (170+ tools SaaS), <strong>PromptBay</strong> (26 AI prompt packs), and <strong>GRI Production Dashboard</strong>. All live and shipped end-to-end." },
+    { keywords: ['freelance','available','hire','work with','open'], reply: "Yes — Shashin is <strong>open to freelance work</strong> alongside his GRI internship. Small-to-medium scoped projects fit best." },
+    { keywords: ['contact','email','reach','talk'], reply: "Reach him via the <a href='#contact'>contact form</a> or email <strong>hello@shashin.dev</strong>. Usually replies within 24 hours." },
+    { keywords: ['gri','intern','internship','current'], reply: "Currently an <strong>IT & Production Data Management Intern at GRI</strong> in Sri Lanka, building real-time dashboards with PHP, MSSQL, Chart.js." },
+    { keywords: ['where','location','based','colombo','sri lanka'], reply: "Based in <strong>Colombo, Sri Lanka</strong>." },
+    { keywords: ['ai','automation','gemini','prompt'], reply: "AI is a core focus — <strong>Gemini API, OpenAI, prompt engineering, canvas rendering, n8n</strong>. SHASHIN Post Creator is a great example." },
+    { keywords: ['learning','study','studying'], reply: "Currently learning <strong>Next.js 15, PostgreSQL, Docker/DevOps, AI agents</strong>." },
+    { keywords: ['experience','years','how long'], reply: "About <strong>3+ years</strong> of coding — started 2023 with HTML/CSS/JS, now shipping full-stack products and AI tools." },
+    { keywords: ['music','song','trending'], reply: "🎵 The music player plays the most-played track from <strong>Audius</strong> — a decentralized music platform. Click the music button in the dock to open it!" },
+    { keywords: ['hi','hello','hey','yo'], reply: "Hey! 👋 Ask me about his <strong>projects, skills, availability</strong>, or anything else!" },
+    { keywords: ['thanks','thank','cool','nice'], reply: "Glad I could help! 🙌 Reach out via the contact form if you want to work with Shashin." }
   ];
 
   function getBotReply(msg) {
     const lower = msg.toLowerCase();
-    for (const item of KB) {
-      if (item.keywords.some(k => lower.includes(k))) return item.reply;
-    }
-    return "I'm not sure about that one — try asking about his <strong>skills, projects, experience</strong>, or <strong>how to contact him</strong>. You can also use the contact form below!";
+    for (const item of KB) if (item.keywords.some(k => lower.includes(k))) return item.reply;
+    return "I'm not sure about that one — try asking about his <strong>skills, projects, experience</strong>, or <strong>how to contact him</strong>.";
   }
 
   async function handleSend() {
@@ -2014,29 +1995,27 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     addUserMessage(text);
     chatInput.value = '';
     chatInput.style.height = 'auto';
-    chatSend.disabled = true;
-    chatStatus?.classList.add('thinking');
+    if (chatSend) chatSend.disabled = true;
+    if (chatStatus) chatStatus.classList.add('thinking');
     if (chatStatusText) chatStatusText.textContent = 'Thinking…';
     showTyping();
     await new Promise(r => setTimeout(r, 800 + Math.random() * 600));
     hideTyping();
     addBotMessage(getBotReply(text));
-    chatSend.disabled = false;
-    chatStatus?.classList.remove('thinking');
+    if (chatSend) chatSend.disabled = false;
+    if (chatStatus) chatStatus.classList.remove('thinking');
     if (chatStatusText) chatStatusText.textContent = 'Online · ask me anything';
   }
-
-  chatSend?.addEventListener('click', handleSend);
-  chatInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  });
-  chatInput?.addEventListener('input', () => {
-    chatInput.style.height = 'auto';
-    chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
-  });
+  if (chatSend) chatSend.addEventListener('click', handleSend);
+  if (chatInput) {
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    });
+    chatInput.addEventListener('input', () => {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
+    });
+  }
   $$('.chat-suggestion').forEach(btn => {
     btn.addEventListener('click', () => {
       chatInput.value = btn.dataset.q;
@@ -2044,9 +2023,9 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     });
   });
 
-  // ═══════════════════════════════════════════════════════════
-  // COMMAND PALETTE
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════
+     COMMAND PALETTE
+     ═══════════════════════════════════════════════════════════ */
   const commandPalette = $('#command-palette');
   const commandInput = $('#command-input');
   let commandOpen = false;
@@ -2054,12 +2033,16 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
   function openCommandPalette() {
     commandPalette.classList.add('open');
     commandOpen = true;
-    setTimeout(() => commandInput?.focus(), 50);
+    setTimeout(() => commandInput && commandInput.focus(), 50);
   }
   function closeCommandPalette() {
     commandPalette.classList.remove('open');
     commandOpen = false;
     if (commandInput) commandInput.value = '';
+  }
+
+  function isTyping(e) {
+    return ['INPUT', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable;
   }
 
   document.addEventListener('keydown', (e) => {
@@ -2069,50 +2052,47 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     }
     if (e.key === 'Escape' && commandOpen) closeCommandPalette();
     if (e.key === 't' && !isTyping(e)) toggleTheme();
-    if (e.key === 'm' && !isTyping(e)) musicBtn?.click();
+    if (e.key === 'm' && !isTyping(e)) musicBtn.click();
     if (e.key === ' ' && !isTyping(e) && musicPlayer.classList.contains('open')) {
       e.preventDefault();
-      playBtn?.click();
+      playBtn.click();
     }
   });
 
-  function isTyping(e) {
-    return ['INPUT', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable;
-  }
-
-  commandInput?.addEventListener('input', () => {
-    const q = commandInput.value.toLowerCase();
-    $$('.command-item').forEach(item => {
-      item.style.display = item.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+  if (commandInput) {
+    commandInput.addEventListener('input', () => {
+      const q = commandInput.value.toLowerCase();
+      $$('.command-item').forEach(item => {
+        item.style.display = item.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+      });
     });
-  });
-
+  }
   $$('.command-item').forEach(item => {
     item.addEventListener('click', () => {
       const action = item.dataset.action;
       const target = item.dataset.target;
       closeCommandPalette();
       setTimeout(() => {
-        if (action === 'scroll' && target) {
-          document.querySelector(target)?.scrollIntoView({ behavior: 'smooth' });
-        } else if (action === 'theme') toggleTheme();
-        else if (action === 'music') musicBtn?.click();
-        else if (action === 'playpause') playBtn?.click();
-        else if (action === 'chat') chatBtn?.click();
+        if (action === 'scroll' && target) document.querySelector(target).scrollIntoView({ behavior: 'smooth' });
+        else if (action === 'theme') toggleTheme();
+        else if (action === 'music') musicBtn.click();
+        else if (action === 'playpause') playBtn.click();
+        else if (action === 'chat') chatBtn.click();
         else if (action === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
     });
   });
+  if (commandPalette) {
+    commandPalette.addEventListener('click', (e) => {
+      if (e.target === commandPalette) closeCommandPalette();
+    });
+  }
 
-  commandPalette?.addEventListener('click', (e) => {
-    if (e.target === commandPalette) closeCommandPalette();
-  });
-
-  // ═══════════════════════════════════════════════════════════
-  // 3D BACKGROUND (particles)
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════
+     3D BACKGROUND
+     ═══════════════════════════════════════════════════════════ */
   const canvas = $('#bg-canvas');
-  let ctx, particles = [], W = 0, H = 0, rafId;
+  let ctx, particles = [], W = 0, H = 0;
   window.__particles = { enabled: true };
 
   function initCanvas() {
@@ -2130,7 +2110,6 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     }
     animate();
   }
-
   function resize() {
     if (!canvas) return;
     W = canvas.width = window.innerWidth;
@@ -2142,22 +2121,20 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
     if (!ctx) return;
     ctx.clearRect(0, 0, W, H);
     if (!window.__particles.enabled) {
-      rafId = requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
       return;
     }
     const isLight = document.body.classList.contains('light');
     const color = isLight ? '217, 74, 40' : '255, 92, 53';
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
+      p.x += p.vx; p.y += p.vy;
       if (p.x < 0 || p.x > W) p.vx *= -1;
       if (p.y < 0 || p.y > H) p.vy *= -1;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(${color}, 0.4)`;
       ctx.fill();
-      // Connect nearby particles
       for (let j = i + 1; j < particles.length; j++) {
         const q = particles[j];
         const dx = p.x - q.x, dy = p.y - q.y;
@@ -2172,37 +2149,9 @@ body.light .hero-image-ring,body.light .hero-image-ring-2{opacity:.45}
         }
       }
     }
-    rafId = requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
   }
   initCanvas();
-
-  // ═══════════════════════════════════════════════════════════
-  // INIT
-  // ═══════════════════════════════════════════════════════════
-  function initAnimations() {
-    // Trigger hero title animation
-    setTimeout(() => {
-      $$('.hero-title .line > span').forEach((s, i) => {
-        s.style.transition = `transform 1s cubic-bezier(.7,0,.2,1) ${i * 0.15}s`;
-        s.style.transform = 'translateY(0)';
-      });
-      $$('.contact-title span').forEach(s => {
-        s.style.transition = 'transform 1s cubic-bezier(.7,0,.2,1)';
-        s.style.transform = 'translateY(0)';
-      });
-    }, 200);
-  }
-
-  window.addEventListener('load', () => {
-    setTimeout(runPreloader, 200);
-  });
-
-  // Ensure preloader runs even if load event already fired
-  if (document.readyState === 'complete') {
-    setTimeout(runPreloader, 200);
-  } else {
-    window.addEventListener('load', () => setTimeout(runPreloader, 200));
-  }
 
 })();
 </script>
